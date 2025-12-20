@@ -1,0 +1,15 @@
+{
+  "keyFactors": {
+    "urbanExpansion": 45,
+    "vegetationLoss": 30,
+    "climateBaseline": 25
+  },
+  "riskProbability": 81,
+  "explanation": {
+    "note": "These percentages represent typical contributions to Urban Heat Island (UHI) effect based on scientific literature and model predictions.",
+    "urbanExpansion": "NDBI-based built-up area expansion contributes ~45% to UHI",
+    "vegetationLoss": "NDVI-based vegetation loss contributes ~30% to UHI",
+    "climateBaseline": "Background climate warming contributes ~25% to UHI",
+    "riskProbability": "Based on Gradient Boosting model R² score (0.621) and predicted warming trend (+0.4°C/year)"
+  }
+}

@@ -1,0 +1,151 @@
+city,year,predicted_temp,confidence_level,prediction_std
+Johor Bahru - City Centre,2026,32.64,0.92,0.72
+Johor Bahru - City Centre,2027,32.64,0.84,0.72
+Johor Bahru - City Centre,2028,32.64,0.76,0.72
+Johor Bahru - City Centre,2029,32.64,0.68,0.72
+Johor Bahru - City Centre,2030,32.64,0.6,0.72
+Johor Bahru - Gelang Patah,2026,32.44,0.92,1.0
+Johor Bahru - Gelang Patah,2027,32.44,0.84,1.0
+Johor Bahru - Gelang Patah,2028,32.44,0.76,1.0
+Johor Bahru - Gelang Patah,2029,32.44,0.68,1.0
+Johor Bahru - Gelang Patah,2030,32.44,0.6,1.0
+Johor Bahru - Kulai,2026,33.3,0.92,0.78
+Johor Bahru - Kulai,2027,33.3,0.84,0.78
+Johor Bahru - Kulai,2028,33.3,0.76,0.78
+Johor Bahru - Kulai,2029,33.3,0.68,0.78
+Johor Bahru - Kulai,2030,33.3,0.6,0.78
+Johor Bahru - Nusajaya,2026,32.0,0.92,0.82
+Johor Bahru - Nusajaya,2027,32.0,0.84,0.82
+Johor Bahru - Nusajaya,2028,32.0,0.76,0.82
+Johor Bahru - Nusajaya,2029,32.0,0.68,0.82
+Johor Bahru - Nusajaya,2030,32.0,0.6,0.82
+Johor Bahru - Pasir Gudang,2026,40.08,0.92,0.46
+Johor Bahru - Pasir Gudang,2027,40.08,0.84,0.46
+Johor Bahru - Pasir Gudang,2028,40.08,0.76,0.46
+Johor Bahru - Pasir Gudang,2029,40.08,0.68,0.46
+Johor Bahru - Pasir Gudang,2030,40.08,0.6,0.46
+Johor Bahru - Permas Jaya,2026,32.88,0.92,0.56
+Johor Bahru - Permas Jaya,2027,32.88,0.84,0.56
+Johor Bahru - Permas Jaya,2028,32.88,0.76,0.56
+Johor Bahru - Permas Jaya,2029,32.88,0.68,0.56
+Johor Bahru - Permas Jaya,2030,32.88,0.6,0.56
+Johor Bahru - Senai,2026,33.23,0.92,1.02
+Johor Bahru - Senai,2027,33.23,0.84,1.02
+Johor Bahru - Senai,2028,33.23,0.76,1.02
+Johor Bahru - Senai,2029,33.23,0.68,1.02
+Johor Bahru - Senai,2030,33.23,0.6,1.02
+Johor Bahru - Skudai,2026,30.65,0.92,0.65
+Johor Bahru - Skudai,2027,30.65,0.84,0.65
+Johor Bahru - Skudai,2028,30.65,0.76,0.65
+Johor Bahru - Skudai,2029,30.65,0.68,0.65
+Johor Bahru - Skudai,2030,30.65,0.6,0.65
+Johor Bahru - Tampoi,2026,36.78,0.92,0.65
+Johor Bahru - Tampoi,2027,36.78,0.84,0.65
+Johor Bahru - Tampoi,2028,36.78,0.76,0.65
+Johor Bahru - Tampoi,2029,36.78,0.68,0.65
+Johor Bahru - Tampoi,2030,36.78,0.6,0.65
+Johor Bahru - Tebrau,2026,37.29,0.92,0.55
+Johor Bahru - Tebrau,2027,37.29,0.84,0.55
+Johor Bahru - Tebrau,2028,37.29,0.76,0.55
+Johor Bahru - Tebrau,2029,37.29,0.68,0.55
+Johor Bahru - Tebrau,2030,37.29,0.6,0.55
+Kuala Lumpur - Ampang,2026,38.32,0.92,0.54
+Kuala Lumpur - Ampang,2027,38.32,0.84,0.54
+Kuala Lumpur - Ampang,2028,38.32,0.76,0.54
+Kuala Lumpur - Ampang,2029,38.32,0.68,0.54
+Kuala Lumpur - Ampang,2030,38.32,0.6,0.54
+Kuala Lumpur - Bangsar,2026,36.98,0.92,0.63
+Kuala Lumpur - Bangsar,2027,36.98,0.84,0.63
+Kuala Lumpur - Bangsar,2028,36.98,0.76,0.63
+Kuala Lumpur - Bangsar,2029,36.98,0.68,0.63
+Kuala Lumpur - Bangsar,2030,36.98,0.6,0.63
+Kuala Lumpur - Bukit Bintang,2026,38.83,0.92,0.38
+Kuala Lumpur - Bukit Bintang,2027,38.83,0.84,0.38
+Kuala Lumpur - Bukit Bintang,2028,38.83,0.76,0.38
+Kuala Lumpur - Bukit Bintang,2029,38.83,0.68,0.38
+Kuala Lumpur - Bukit Bintang,2030,38.83,0.6,0.38
+Kuala Lumpur - Cheras,2026,39.2,0.92,0.39
+Kuala Lumpur - Cheras,2027,39.2,0.84,0.39
+Kuala Lumpur - Cheras,2028,39.2,0.76,0.39
+Kuala Lumpur - Cheras,2029,39.2,0.68,0.39
+Kuala Lumpur - Cheras,2030,39.2,0.6,0.39
+Kuala Lumpur - KLCC,2026,38.6,0.92,0.38
+Kuala Lumpur - KLCC,2027,38.6,0.84,0.38
+Kuala Lumpur - KLCC,2028,38.6,0.76,0.38
+Kuala Lumpur - KLCC,2029,38.6,0.68,0.38
+Kuala Lumpur - KLCC,2030,38.6,0.6,0.38
+Kuala Lumpur - Kepong,2026,38.64,0.92,0.44
+Kuala Lumpur - Kepong,2027,38.64,0.84,0.44
+Kuala Lumpur - Kepong,2028,38.64,0.76,0.44
+Kuala Lumpur - Kepong,2029,38.64,0.68,0.44
+Kuala Lumpur - Kepong,2030,38.64,0.6,0.44
+Kuala Lumpur - Mont Kiara,2026,38.74,0.92,0.39
+Kuala Lumpur - Mont Kiara,2027,38.74,0.84,0.39
+Kuala Lumpur - Mont Kiara,2028,38.74,0.76,0.39
+Kuala Lumpur - Mont Kiara,2029,38.74,0.68,0.39
+Kuala Lumpur - Mont Kiara,2030,38.74,0.6,0.39
+Kuala Lumpur - Petaling Jaya,2026,38.79,0.92,0.38
+Kuala Lumpur - Petaling Jaya,2027,38.79,0.84,0.38
+Kuala Lumpur - Petaling Jaya,2028,38.79,0.76,0.38
+Kuala Lumpur - Petaling Jaya,2029,38.79,0.68,0.38
+Kuala Lumpur - Petaling Jaya,2030,38.79,0.6,0.38
+Kuala Lumpur - Sentul,2026,38.17,0.92,0.33
+Kuala Lumpur - Sentul,2027,38.17,0.84,0.33
+Kuala Lumpur - Sentul,2028,38.17,0.76,0.33
+Kuala Lumpur - Sentul,2029,38.17,0.68,0.33
+Kuala Lumpur - Sentul,2030,38.17,0.6,0.33
+Kuala Lumpur - Setapak,2026,35.97,0.92,0.59
+Kuala Lumpur - Setapak,2027,35.97,0.84,0.59
+Kuala Lumpur - Setapak,2028,35.97,0.76,0.59
+Kuala Lumpur - Setapak,2029,35.97,0.68,0.59
+Kuala Lumpur - Setapak,2030,35.97,0.6,0.59
+Penang - Balik Pulau,2026,33.45,0.92,1.12
+Penang - Balik Pulau,2027,33.45,0.84,1.12
+Penang - Balik Pulau,2028,33.45,0.76,1.12
+Penang - Balik Pulau,2029,33.45,0.68,1.12
+Penang - Balik Pulau,2030,33.45,0.6,1.12
+Penang - Batu Kawan,2026,33.19,0.92,0.68
+Penang - Batu Kawan,2027,33.19,0.84,0.68
+Penang - Batu Kawan,2028,33.19,0.76,0.68
+Penang - Batu Kawan,2029,33.19,0.68,0.68
+Penang - Batu Kawan,2030,33.19,0.6,0.68
+Penang - Bayan Lepas,2026,32.76,0.92,0.71
+Penang - Bayan Lepas,2027,32.76,0.84,0.71
+Penang - Bayan Lepas,2028,32.76,0.76,0.71
+Penang - Bayan Lepas,2029,32.76,0.68,0.71
+Penang - Bayan Lepas,2030,32.76,0.6,0.71
+Penang - Bukit Mertajam,2026,36.28,0.92,0.58
+Penang - Bukit Mertajam,2027,36.28,0.84,0.58
+Penang - Bukit Mertajam,2028,36.28,0.76,0.58
+Penang - Bukit Mertajam,2029,36.28,0.68,0.58
+Penang - Bukit Mertajam,2030,36.28,0.6,0.58
+Penang - Butterworth,2026,36.81,0.92,0.72
+Penang - Butterworth,2027,36.81,0.84,0.72
+Penang - Butterworth,2028,36.81,0.76,0.72
+Penang - Butterworth,2029,36.81,0.68,0.72
+Penang - Butterworth,2030,36.81,0.6,0.72
+Penang - Georgetown,2026,39.37,0.92,0.53
+Penang - Georgetown,2027,39.37,0.84,0.53
+Penang - Georgetown,2028,39.37,0.76,0.53
+Penang - Georgetown,2029,39.37,0.68,0.53
+Penang - Georgetown,2030,39.37,0.6,0.53
+Penang - Jelutong,2026,36.04,0.92,0.72
+Penang - Jelutong,2027,36.04,0.84,0.72
+Penang - Jelutong,2028,36.04,0.76,0.72
+Penang - Jelutong,2029,36.04,0.68,0.72
+Penang - Jelutong,2030,36.04,0.6,0.72
+Penang - Seberang Perai,2026,40.2,0.92,0.35
+Penang - Seberang Perai,2027,40.2,0.84,0.35
+Penang - Seberang Perai,2028,40.2,0.76,0.35
+Penang - Seberang Perai,2029,40.2,0.68,0.35
+Penang - Seberang Perai,2030,40.2,0.6,0.35
+Penang - Tanjung Bungah,2026,33.0,0.92,0.69
+Penang - Tanjung Bungah,2027,33.0,0.84,0.69
+Penang - Tanjung Bungah,2028,33.0,0.76,0.69
+Penang - Tanjung Bungah,2029,33.0,0.68,0.69
+Penang - Tanjung Bungah,2030,33.0,0.6,0.69
+Penang - Tanjung Tokong,2026,35.92,0.92,0.63
+Penang - Tanjung Tokong,2027,35.92,0.84,0.63
+Penang - Tanjung Tokong,2028,35.92,0.76,0.63
+Penang - Tanjung Tokong,2029,35.92,0.68,0.63
+Penang - Tanjung Tokong,2030,35.92,0.6,0.63

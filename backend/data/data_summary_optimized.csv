@@ -1,0 +1,6 @@
+,,temperature,temperature,temperature,temperature,ndvi
+,,count,mean,min,max,mean
+city,location_name,,,,,
+Penang,Bayan Lepas,12,-33.47,-123.15,35.27,0.11
+Penang,Butterworth,12,-18.99,-123.15,44.09,0.05
+Penang,Georgetown,12,-20.35,-123.15,45.7,0.07

@@ -1,0 +1,10 @@
+earthengine-api==0.1.398
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-dotenv==1.0.0
+pydantic==2.5.3
+pandas==2.1.4
+pyarrow==14.0.2
+supabase==2.3.0
+xgboost==2.0.3
+scikit-learn==1.4.0

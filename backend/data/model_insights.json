@@ -1,0 +1,24 @@
+{
+  "keyFactors": {
+    "urbanExpansion": 6,
+    "vegetationLoss": 4,
+    "climateBaseline": 26,
+    "historicalPatterns": 64
+  },
+  "riskProbability": 81,
+  "modelPerformance": {
+    "r2Score": 0.621,
+    "confidence": 62.1
+  },
+  "featureImportance": {
+    "year_normalized": 16.5,
+    "month_sin": 5.2,
+    "month_cos": 4.8,
+    "temp_lag_1y": 1.9,
+    "temp_lag_2y": 13.4,
+    "temp_rolling_mean_3m": 26.7,
+    "temp_rolling_std_3m": 21.8,
+    "ndvi_filled": 4.0,
+    "ndbi_filled": 5.8
+  }
+}
