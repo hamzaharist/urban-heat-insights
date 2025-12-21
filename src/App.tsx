@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import { HeatMapPage } from "./pages/HeatMapPage";
 import { PredictionsPage } from "./pages/PredictionsPage";
+import ScenarioPage from "./pages/ScenarioPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/heatmap" element={<HeatMapPage />} />
           <Route path="/predictions" element={<PredictionsPage />} />
+          <Route path="/scenarios" element={<ScenarioPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -75,7 +75,7 @@ const HeroSection = () => {
             <Button
               variant="heroOutline"
               size="xl"
-              onClick={() => navigate('/predictions')}
+              onClick={() => navigate('/scenarios')}
             >
               View Future Scenarios
             </Button>
