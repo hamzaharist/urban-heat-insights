@@ -10,7 +10,11 @@ from typing import Optional
 import os
 from dotenv import load_dotenv
 import ee
-from prediction_api import router as prediction_router, load_model
+from prediction_api import router as prediction_router
+from scenarios_api import router as scenarios_router
+from heatmap_api import router as heatmap_router
+from geojson_api import router as geojson_router
+from timeseries_api import router as timeseries_router
 
 # Load environment variables
 load_dotenv()
@@ -25,14 +29,56 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:8081")],
+    allow_origins=[
+        "http://localhost:8081",
+        "http://localhost:8080",
+        "https://*.vercel.app",  # All Vercel deployments
+        "https://urban-heat-insights.vercel.app",  # Production URL
+        os.getenv("FRONTEND_URL", "http://localhost:8081"),
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include prediction router
+# Include routers
 app.include_router(prediction_router)
+app.include_router(scenarios_router)
+app.include_router(heatmap_router)
+app.include_router(geojson_router)
+app.include_router(timeseries_router)
+
+# Load compliance data for API endpoints
+import pandas as pd
+from pathlib import Path
+
+compliance_data = None
+cities_data = None
+
+def load_compliance_data():
+    """Load compliance scores data"""
+    global compliance_data, cities_data
+    try:
+        data_file = Path(__file__).parent / "data" / "compliance_scores_all_cities.csv"
+        if data_file.exists():
+            compliance_data = pd.read_csv(data_file)
+            
+            # Create cities summary
+            cities_data = compliance_data.groupby(['city', 'State']).agg({
+                'gbi_score': 'mean',
+                'sdg11_score': 'mean',
+                'green_cover_percentage': 'mean',
+                'property_risk_score': 'mean'
+            }).reset_index()
+            
+            print(f"✓ Loaded compliance data for {len(cities_data)} cities")
+        else:
+            print("⚠ Compliance data file not found")
+    except Exception as e:
+        print(f"✗ Error loading compliance data: {e}")
+
+# Load compliance data on startup
+load_compliance_data()
 
 # Initialize Google Earth Engine
 def initialize_gee():
@@ -66,7 +112,15 @@ def initialize_gee():
 @app.on_event("startup")
 async def startup_event():
     initialize_gee()
-    load_model()  # Load ML prediction model
+    
+    # Pre-load GeoJSON cache to speed up first request
+    from geojson_api import get_hotspots_from_db
+    print("Pre-loading GeoJSON cache...")
+    try:
+        hotspots = get_hotspots_from_db()
+        print(f"✓ GeoJSON cache pre-loaded with {len(hotspots)} hotspots")
+    except Exception as e:
+        print(f"⚠ Warning: Could not pre-load GeoJSON cache: {e}")
 
 # Pydantic models
 class LSTResponse(BaseModel):
@@ -261,7 +315,118 @@ async def generate_uhi_map(request: UHIMapRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating UHI map: {str(e)}")
 
+# Compliance endpoints
+@app.get("/api/compliance/{city}")
+async def get_city_compliance(city: str):
+    """
+    Get compliance scores for a specific city
+    Returns GBI, SDG11 scores, and financial risk metrics
+    """
+    if compliance_data is None:
+        raise HTTPException(status_code=503, detail="Compliance data not loaded")
+    
+    try:
+        # Filter by city (case-insensitive)
+        city_data = compliance_data[compliance_data['city'].str.lower() == city.lower()]
+        
+        if city_data.empty:
+            raise HTTPException(status_code=404, detail=f"City '{city}' not found")
+        
+        # Calculate aggregates
+        result = {
+            "city": city.title(),
+            "state": city_data['State'].iloc[0],
+            "total_zones": len(city_data),
+            "gbi_score": int(city_data['gbi_score'].mean()),
+            "gbi_status": city_data['gbi_status'].mode()[0] if len(city_data) > 0 else "UNKNOWN",
+            "sdg11_score": int(city_data['sdg11_score'].mean()),
+            "green_cover_percentage": round(float(city_data['green_cover_percentage'].mean()), 1),
+            "uhi_intensity": round(float(city_data['uhi_intensity'].mean()), 2),
+            "trees_needed": int(city_data['trees_needed'].sum()),
+            "property_risk_score": int(city_data['property_risk_score'].mean()),
+            "estimated_value_loss": float(city_data['estimated_value_loss'].sum()),
+            "zones_pass": int((city_data['gbi_status'] == 'PASS').sum()),
+            "zones_warning": int((city_data['gbi_status'] == 'WARNING').sum()),
+            "zones_fail": int((city_data['gbi_status'] == 'FAIL').sum())
+        }
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching compliance data: {str(e)}")
+
+@app.get("/api/cities")
+async def get_all_cities():
+    """
+    Get list of all cities with basic compliance info
+    Returns cities grouped by state
+    """
+    if cities_data is None:
+        raise HTTPException(status_code=503, detail="Cities data not loaded")
+    
+    try:
+        # Convert to dict grouped by state
+        cities_by_state = {}
+        for _, row in cities_data.iterrows():
+            state = row['State']
+            if state not in cities_by_state:
+                cities_by_state[state] = []
+            
+            cities_by_state[state].append({
+                "name": row['city'].title(),
+                "gbi_score": int(row['gbi_score']),
+                "sdg11_score": int(row['sdg11_score']),
+                "green_cover": round(float(row['green_cover_percentage']), 1),
+                "risk_score": int(row['property_risk_score'])
+            })
+        
+        # Sort cities within each state
+        for state in cities_by_state:
+            cities_by_state[state] = sorted(cities_by_state[state], key=lambda x: x['name'])
+        
+        return {
+            "total_cities": len(cities_data),
+            "total_states": len(cities_by_state),
+            "cities_by_state": cities_by_state
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching cities: {str(e)}")
+
+@app.get("/api/compliance/summary")
+async def get_compliance_summary():
+    """
+    Get overall compliance summary across all cities
+    """
+    if compliance_data is None:
+        raise HTTPException(status_code=503, detail="Compliance data not loaded")
+    
+    try:
+        summary = {
+            "total_zones": len(compliance_data),
+            "total_cities": compliance_data['city'].nunique(),
+            "total_states": compliance_data['State'].nunique(),
+            "avg_gbi_score": round(float(compliance_data['gbi_score'].mean()), 1),
+            "avg_sdg11_score": round(float(compliance_data['sdg11_score'].mean()), 1),
+            "avg_green_cover": round(float(compliance_data['green_cover_percentage'].mean()), 1),
+            "avg_uhi_intensity": round(float(compliance_data['uhi_intensity'].mean()), 2),
+            "total_trees_needed": int(compliance_data['trees_needed'].sum()),
+            "total_value_at_risk": float(compliance_data['estimated_value_loss'].sum()),
+            "zones_pass": int((compliance_data['gbi_status'] == 'PASS').sum()),
+            "zones_warning": int((compliance_data['gbi_status'] == 'WARNING').sum()),
+            "zones_fail": int((compliance_data['gbi_status'] == 'FAIL').sum()),
+            "compliance_rate": round(float((compliance_data['gbi_status'] == 'PASS').sum() / len(compliance_data) * 100), 1)
+        }
+        
+        return summary
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating summary: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 3003))  # Changed to 3003 to avoid conflicts
+    port = int(os.getenv("PORT", 3004))  # Changed to 3004 to avoid conflicts
     uvicorn.run(app, host="0.0.0.0", port=port)
+
