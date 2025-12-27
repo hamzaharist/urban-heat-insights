@@ -13,7 +13,7 @@ const ProblemSection = () => {
             Urban Heat Islands Are Making Malaysian Cities Dangerously Hot
           </h2>
           <p className="text-lg text-muted-foreground">
-            As cities expand and green spaces shrink, concrete and asphalt absorb and re-emit heat, 
+            As cities expand and green spaces shrink, concrete and asphalt absorb and re-emit heat,
             creating localized warming that threatens public health and sustainability.
           </p>
         </div>
@@ -23,16 +23,16 @@ const ProblemSection = () => {
           {/* Urban vs Rural Card */}
           <div className="bg-card rounded-2xl p-8 shadow-card hover:shadow-card-hover transition-shadow">
             <h3 className="font-display text-xl font-semibold text-foreground mb-6">Temperature Comparison</h3>
-            
+
             <div className="space-y-6">
               {/* Urban */}
               <div className="relative">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-foreground">Urban Core (Kuala Lumpur)</span>
-                  <span className="text-sm font-bold text-heat-extreme">38.5°C</span>
+                  <span className="text-sm font-bold text-heat-extreme">37.0°C</span>
                 </div>
                 <div className="h-4 bg-muted rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full rounded-full bg-gradient-to-r from-heat-warm via-heat-hot to-heat-extreme"
                     style={{ width: '95%' }}
                   />
@@ -43,10 +43,10 @@ const ProblemSection = () => {
               <div className="relative">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-foreground">Suburban Areas</span>
-                  <span className="text-sm font-bold text-heat-warm">34.2°C</span>
+                  <span className="text-sm font-bold text-heat-warm">35.3°C</span>
                 </div>
                 <div className="h-4 bg-muted rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full rounded-full bg-gradient-to-r from-heat-mild to-heat-warm"
                     style={{ width: '70%' }}
                   />
@@ -57,10 +57,10 @@ const ProblemSection = () => {
               <div className="relative">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-foreground">Rural/Forested</span>
-                  <span className="text-sm font-bold text-heat-cool">29.3°C</span>
+                  <span className="text-sm font-bold text-heat-cool">33.0°C</span>
                 </div>
                 <div className="h-4 bg-muted rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full rounded-full bg-gradient-to-r from-heat-cool to-heat-mild"
                     style={{ width: '45%' }}
                   />
@@ -89,7 +89,7 @@ const ProblemSection = () => {
                 <div>
                   <h4 className="font-display font-semibold text-foreground mb-2">Public Health Risk</h4>
                   <p className="text-sm text-muted-foreground">
-                    Heat-related illnesses increase by 15-20% during UHI peak events. 
+                    Heat-related illnesses increase by 15-20% during UHI peak events.
                     Vulnerable populations face heightened cardiovascular and respiratory risks.
                   </p>
                 </div>
@@ -104,7 +104,7 @@ const ProblemSection = () => {
                 <div>
                   <h4 className="font-display font-semibold text-foreground mb-2">Energy Demand Surge</h4>
                   <p className="text-sm text-muted-foreground">
-                    Air conditioning demand spikes 5-10% for every 1°C increase, 
+                    Air conditioning demand spikes 5-10% for every 1°C increase,
                     straining power grids and increasing carbon emissions.
                   </p>
                 </div>
@@ -119,7 +119,7 @@ const ProblemSection = () => {
                 <div>
                   <h4 className="font-display font-semibold text-foreground mb-2">Sustainability Challenge</h4>
                   <p className="text-sm text-muted-foreground">
-                    UHI effects undermine climate adaptation efforts and SDG 11 
+                    UHI effects undermine climate adaptation efforts and SDG 11
                     (Sustainable Cities) goals across Southeast Asian urban centers.
                   </p>
                 </div>

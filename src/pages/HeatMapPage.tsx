@@ -17,8 +17,9 @@ export function HeatMapPage() {
      const [selectedCity, setSelectedCity] = useState('Kuala Lumpur');
      const [selectedLayer, setSelectedLayer] = useState<LayerType>('temperature');
      const [selectedHotspot, setSelectedHotspot] = useState<HotspotData | null>(null);
+     const [useAI, setUseAI] = useState(true); // Toggle between AI predictions and actual data
 
-     const { data: allHotspots } = useAllHotspots();
+     const { data: allHotspots } = useAllHotspots(useAI);
 
      const handleHotspotClick = (hotspot: HotspotData) => {
           setSelectedHotspot(hotspot);
@@ -26,7 +27,7 @@ export function HeatMapPage() {
 
      return (
           <div className="relative w-full h-screen overflow-hidden bg-background">
-               {/* Top Center: Back Button + City Selector */}
+               {/* Top Center: Back Button + City Selector + Toggle */}
                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
                     {/* Back Button */}
                     <button
@@ -44,6 +45,23 @@ export function HeatMapPage() {
                               onCityChange={setSelectedCity}
                          />
                     </div>
+
+                    {/* Data Source Toggle */}
+                    <button
+                         onClick={() => setUseAI(!useAI)}
+                         className="flex items-center gap-3 px-4 py-2 bg-background/90 backdrop-blur-md border border-border/50 rounded-full shadow-lg hover:bg-accent transition-all"
+                    >
+                         <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${useAI ? 'bg-purple-500 animate-pulse' : 'bg-green-500'}`}></div>
+                              <span className="text-xs font-semibold">{useAI ? 'AI Predictions' : 'Actual Data'}</span>
+                         </div>
+                         <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <span>Toggle</span>
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                              </svg>
+                         </div>
+                    </button>
                </div>
 
                {/* Full-Screen Map */}

@@ -68,6 +68,13 @@ const HeroSection = () => {
             <Button
               variant="hero"
               size="xl"
+              onClick={() => navigate('/choropleth')}
+            >
+              View Choropleth Map
+            </Button>
+            <Button
+              variant="heroOutline"
+              size="xl"
               onClick={() => navigate('/heatmap')}
             >
               Explore Heat Maps

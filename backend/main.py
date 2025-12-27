@@ -25,7 +25,13 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:8081")],
+    allow_origins=[
+        "http://localhost:8081",
+        "http://localhost:8080",
+        "https://*.vercel.app",  # All Vercel deployments
+        "https://urban-heat-insights.vercel.app",  # Production URL
+        os.getenv("FRONTEND_URL", "http://localhost:8081"),
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

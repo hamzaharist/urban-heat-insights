@@ -9,6 +9,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type { HotspotData } from '@/types/weather';
 import type { LayerType } from '@/components/heatmap/LayerControl';
+import { getLSTIntensity } from '@/utils/temperature';
 
 interface InteractiveMapProps {
      hotspots: HotspotData[];
@@ -94,7 +95,7 @@ export default function InteractiveMap({ hotspots, selectedCity, selectedLayer =
                     properties: {
                          name: h.name,
                          temperature: h.temperature,
-                         intensity: h.intensity,
+                         intensity: getLSTIntensity(h.temperature), // Dynamic LST calc
                          avg_ndvi: h.avg_ndvi,
                          avg_ndbi: h.avg_ndbi,
                     },
@@ -186,10 +187,14 @@ export default function InteractiveMap({ hotspots, selectedCity, selectedLayer =
                               'match',
                               ['get', 'intensity'],
                               'extreme', '#dc2626',
+                              'critical', '#dc2626', // Alias for extreme
                               'hot', '#ea580c',
+                              'high', '#ea580c',     // Alias for hot
                               'warm', '#f59e0b',
+                              'medium', '#f59e0b',   // Alias for warm
                               'mild', '#eab308',
                               'cool', '#22c55e',
+                              'low', '#22c55e',      // Alias for cool
                               '#eab308' // default
                          ],
                          'circle-stroke-color': '#ffffff',
@@ -528,23 +533,19 @@ export default function InteractiveMap({ hotspots, selectedCity, selectedLayer =
                          <div className="space-y-2.5">
                               <div className="flex items-center gap-3 group">
                                    <div className="w-3 h-3 rounded-full border border-white/50 shadow-lg animate-pulse" style={{ backgroundColor: '#dc2626' }}></div>
-                                   <span className="text-xs text-white/90 font-medium">Extreme <span className="text-white/60">≥38°C</span></span>
+                                   <span className="text-xs text-white/90 font-medium">Critical <span className="text-white/60">≥35°C</span></span>
                               </div>
                               <div className="flex items-center gap-3 group">
                                    <div className="w-3 h-3 rounded-full border border-white/50 shadow-lg" style={{ backgroundColor: '#ea580c' }}></div>
-                                   <span className="text-xs text-white/90 font-medium">Hot <span className="text-white/60">36-38°C</span></span>
+                                   <span className="text-xs text-white/90 font-medium">High <span className="text-white/60">32-35°C</span></span>
                               </div>
                               <div className="flex items-center gap-3 group">
                                    <div className="w-3 h-3 rounded-full border border-white/50 shadow-lg" style={{ backgroundColor: '#f59e0b' }}></div>
-                                   <span className="text-xs text-white/90 font-medium">Warm <span className="text-white/60">34-36°C</span></span>
-                              </div>
-                              <div className="flex items-center gap-3 group">
-                                   <div className="w-3 h-3 rounded-full border border-white/50 shadow-lg" style={{ backgroundColor: '#eab308' }}></div>
-                                   <span className="text-xs text-white/90 font-medium">Mild <span className="text-white/60">32-34°C</span></span>
+                                   <span className="text-xs text-white/90 font-medium">Medium <span className="text-white/60">29-32°C</span></span>
                               </div>
                               <div className="flex items-center gap-3 group">
                                    <div className="w-3 h-3 rounded-full border border-white/50 shadow-lg" style={{ backgroundColor: '#22c55e' }}></div>
-                                   <span className="text-xs text-white/90 font-medium">Cool <span className="text-white/60">&lt;32°C</span></span>
+                                   <span className="text-xs text-white/90 font-medium">Low <span className="text-white/60">&lt;29°C</span></span>
                               </div>
                          </div>
                     </div>

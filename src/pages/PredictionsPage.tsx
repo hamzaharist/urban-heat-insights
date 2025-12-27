@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Sliders, Brain, RotateCcw } from 'lucide-react';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PredictionsChart } from '@/components/predictions/PredictionsChart';
@@ -119,6 +120,11 @@ export function PredictionsPage() {
 
                {/* Content Area */}
                <div className="relative flex-1 p-4 pt-20 pb-4 overflow-y-auto">
+                    {/* Breadcrumbs */}
+                    <div className="max-w-7xl mx-auto mb-4">
+                         <Breadcrumbs />
+                    </div>
+
                     {/* Page Title */}
                     <div className="text-center mb-6 animate-in fade-in-50 slide-in-from-top-4 duration-700">
                          <h1 className="text-4xl font-bold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent mb-2">
@@ -220,19 +226,19 @@ export function PredictionsPage() {
                                    </div>
                               </div>
 
-                              {/* Scenarios Toggle */}
+                              {/* Scenarios Link */}
                               <div className="space-y-2">
                                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                                         Scenarios
                                    </label>
                                    <Button
-                                        variant={scenariosExpanded ? 'default' : 'outline'}
+                                        variant="outline"
                                         size="sm"
-                                        onClick={() => setScenariosExpanded(!scenariosExpanded)}
+                                        onClick={() => navigate(`/scenarios/${selectedCity.toLowerCase().replace(' ', '-')}`)}
                                         className="w-full"
                                    >
                                         <Sliders className="w-4 h-4 mr-2" />
-                                        {scenariosExpanded ? 'Hide' : 'Simulate'}
+                                        Run What-If Scenario
                                    </Button>
                               </div>
 

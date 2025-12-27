@@ -1,5 +1,8 @@
 import { MapPin, Thermometer, Leaf, Building2, TrendingUp, Calendar, Satellite, Droplets } from 'lucide-react';
 import { HotspotData } from '@/types/weather';
+import { getLSTIntensity } from '@/utils/temperature';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface HotspotDetailsPanelProps {
@@ -74,11 +77,11 @@ export function HotspotDetailsPanel({ hotspot, allHotspots = [] }: HotspotDetail
                     {/* Intensity Badge */}
                     <div
                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium ${getIntensityColor(
-                              hotspot.intensity
+                              getLSTIntensity(hotspot.temperature)
                          )}`}
                     >
                          <TrendingUp className="w-3 h-3" />
-                         {hotspot.intensity.charAt(0).toUpperCase() + hotspot.intensity.slice(1)} Heat Intensity
+                         {getLSTIntensity(hotspot.temperature).charAt(0).toUpperCase() + getLSTIntensity(hotspot.temperature).slice(1)} Heat Intensity
                     </div>
                </div>
 
@@ -115,7 +118,7 @@ export function HotspotDetailsPanel({ hotspot, allHotspots = [] }: HotspotDetail
                               <div className="bg-background/50 border border-border/30 rounded-lg p-3">
                                    <div className="flex items-center gap-2 mb-1">
                                         <Thermometer className="w-4 h-4 text-heat-extreme" />
-                                        <span className="text-xs text-muted-foreground">Temperature</span>
+                                        <span className="text-xs text-muted-foreground">Surface Temp (LST)</span>
                                    </div>
                                    <div className="text-lg font-display font-bold text-heat-extreme">
                                         {hotspot.temperature.toFixed(1)}°C
@@ -204,6 +207,14 @@ export function HotspotDetailsPanel({ hotspot, allHotspots = [] }: HotspotDetail
                                         {hotspot.avg_ndbi && hotspot.avg_ndbi > 0 ? 'High' : 'Moderate'}
                                    </span>
                               </div>
+
+                              {/* View Full Strategy Button */}
+                              <Link to={`/city/${hotspot.city}`} className="block mt-4">
+                                   <Button className="w-full h-8 text-xs gap-2" variant="outline">
+                                        <TrendingUp className="w-3 h-3" />
+                                        View City Strategy
+                                   </Button>
+                              </Link>
                          </div>
                     </TabsContent>
 

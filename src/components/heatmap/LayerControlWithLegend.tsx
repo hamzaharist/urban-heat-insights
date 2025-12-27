@@ -1,6 +1,7 @@
 import { Layers, Thermometer, Leaf, Building2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { LST_LEGEND } from '@/utils/temperature';
 
 export type LayerType = 'temperature' | 'ndvi' | 'ndbi';
 
@@ -12,16 +13,15 @@ interface LayerControlWithLegendProps {
 const LAYERS = [
      {
           value: 'temperature' as LayerType,
-          label: 'Temperature',
-          description: 'Land Surface Temperature',
+          label: 'Surface Heat (LST)',
+          description: 'Land Surface Temperature (Higher than Air Temp)',
           color: 'text-heat-extreme',
           icon: Thermometer,
           legend: [
-               { color: '#dc2626', label: 'Extreme', range: '> 38°C' },
-               { color: '#ea580c', label: 'Hot', range: '36-38°C' },
-               { color: '#f59e0b', label: 'Warm', range: '34-36°C' },
-               { color: '#eab308', label: 'Mild', range: '32-34°C' },
-               { color: '#22c55e', label: 'Cool', range: '< 32°C' },
+               { color: LST_LEGEND.critical.color, label: LST_LEGEND.critical.label, range: LST_LEGEND.critical.range, desc: LST_LEGEND.critical.desc },
+               { color: LST_LEGEND.high.color, label: LST_LEGEND.high.label, range: LST_LEGEND.high.range, desc: LST_LEGEND.high.desc },
+               { color: LST_LEGEND.medium.color, label: LST_LEGEND.medium.label, range: LST_LEGEND.medium.range, desc: LST_LEGEND.medium.desc },
+               { color: LST_LEGEND.low.color, label: LST_LEGEND.low.label, range: LST_LEGEND.low.range, desc: LST_LEGEND.low.desc },
           ],
      },
      {
@@ -118,13 +118,21 @@ export function LayerControlWithLegend({ selectedLayer, onLayerChange }: LayerCo
                                         className="w-4 h-4 rounded border border-border/30 flex-shrink-0"
                                         style={{ backgroundColor: item.color }}
                                    />
-                                   <div className="flex-1 flex items-center justify-between">
-                                        <span className="font-medium text-foreground">
-                                             {item.label}
-                                        </span>
-                                        <span className="text-muted-foreground">
-                                             {item.range}
-                                        </span>
+                                   <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                             <span className="font-medium text-foreground">
+                                                  {item.label}
+                                             </span>
+                                             <span className="text-muted-foreground">
+                                                  {item.range}
+                                             </span>
+                                        </div>
+                                        {/* Inline Description */}
+                                        {'desc' in item && (
+                                             <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
+                                                  {item.desc}
+                                             </div>
+                                        )}
                                    </div>
                               </div>
                          ))}

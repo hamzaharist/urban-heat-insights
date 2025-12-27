@@ -9,6 +9,7 @@ const Navbar = () => {
     { label: "Problem", href: "#problem" },
     { label: "Technology", href: "#technology" },
     { label: "Heat Map", href: "#map" },
+    { label: "Choropleth", href: "/choropleth" },
     { label: "Predictions", href: "#predictions" },
     { label: "Scenarios", href: "#scenarios" },
     { label: "About", href: "#about" },
@@ -41,13 +42,13 @@ const Navbar = () => {
 
           {/* CTA */}
           <div className="hidden md:block">
-            <Button variant="default" size="sm">
-              Explore Data
+            <Button variant="default" size="sm" asChild>
+              <a href="/choropleth">Explore Data</a>
             </Button>
           </div>
 
           {/* Mobile Menu Toggle */}
-          <button 
+          <button
             className="md:hidden p-2"
             onClick={() => setIsOpen(!isOpen)}
           >
@@ -73,8 +74,8 @@ const Navbar = () => {
                   {link.label}
                 </a>
               ))}
-              <Button variant="default" size="sm" className="mt-2">
-                Explore Data
+              <Button variant="default" size="sm" className="mt-2" asChild>
+                <a href="/choropleth">Explore Data</a>
               </Button>
             </div>
           </div>

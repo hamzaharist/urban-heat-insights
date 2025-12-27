@@ -10,6 +10,8 @@ import Map, { Marker, Popup, Layer, Source } from 'react-map-gl';
 import type { HotspotData } from '@/types/weather';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
+import { getLSTIntensity } from '@/utils/temperature';
+
 interface MapboxHeatMapProps {
      hotspots: HotspotData[];
 }
@@ -34,6 +36,7 @@ export default function MapboxHeatMap({ hotspots }: MapboxHeatMapProps) {
                properties: {
                     temperature: h.temperature,
                     intensity: (h.temperature - 25) / 15, // Normalize 25-40°C to 0-1
+                    markerIntensity: getLSTIntensity(h.temperature), // For marker color
                },
                geometry: {
                     type: 'Point' as const,
@@ -75,10 +78,14 @@ export default function MapboxHeatMap({ hotspots }: MapboxHeatMapProps) {
      const getMarkerColor = (intensity: string): string => {
           const colors: Record<string, string> = {
                extreme: '#dc2626',
+               critical: '#dc2626',
                hot: '#ea580c',
+               high: '#ea580c',
                warm: '#f59e0b',
+               medium: '#f59e0b',
                mild: '#eab308',
                cool: '#22c55e',
+               low: '#22c55e',
           };
           return colors[intensity] || colors.mild;
      };
@@ -126,7 +133,7 @@ export default function MapboxHeatMap({ hotspots }: MapboxHeatMapProps) {
                               {/* Main marker */}
                               <div
                                    className="relative w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center"
-                                   style={{ backgroundColor: getMarkerColor(hotspot.intensity) }}
+                                   style={{ backgroundColor: getMarkerColor(getLSTIntensity(hotspot.temperature)) }}
                               >
                                    <div className="w-2 h-2 bg-white rounded-full" />
                               </div>
