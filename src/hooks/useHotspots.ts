@@ -9,7 +9,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
  * Hook to fetch hotspots with toggle between ACTUAL data and AI PREDICTIONS
  * @param useAI - If true, uses ML predictions. If false, uses Supabase actual data.
  */
-export function useAllHotspots(useAI: boolean = true) {
+export function useAllHotspots(useAI: boolean = false) {
      return useQuery({
           queryKey: ['hotspots', useAI ? 'ai-predictions' : 'actual-data'],
           queryFn: async (): Promise<HotspotData[]> => {

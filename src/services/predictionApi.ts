@@ -23,6 +23,7 @@ export interface PredictionMetrics {
      avg_increase: number;
      trend: 'rising' | 'stable' | 'falling';
      confidence: number;
+     baseline_temp: number;
 }
 
 export interface ScenarioPredictionResponse {

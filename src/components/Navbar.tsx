@@ -10,8 +10,7 @@ const Navbar = () => {
     { label: "Technology", href: "#technology" },
     { label: "Heat Map", href: "#map" },
     { label: "Choropleth", href: "/choropleth" },
-    { label: "Predictions", href: "#predictions" },
-    { label: "Scenarios", href: "#scenarios" },
+    { label: "Scenarios", href: "/scenarios" },
     { label: "About", href: "#about" },
   ];
 

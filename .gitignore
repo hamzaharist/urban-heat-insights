@@ -74,3 +74,10 @@ next-env.d.ts
 *_key.json
 credentials.json
 service-account*.json
+nul
+
+# Large data files and models (>100MB)
+*.pkl
+backend/data/*.csv
+backend/data/*.parquet
+catboost_info/

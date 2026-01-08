@@ -37,10 +37,13 @@ export function PredictionsChart({
      const yearlyData = React.useMemo(() => {
           // If ML predictions are available, use them
           if (mlPredictions) {
+               // Use the baseline temperature from the metrics
+               const baselineTemp = mlPredictions.metrics.baseline_temp;
+
                return mlPredictions.predictions.map(pred => ({
                     year: pred.year,
                     temperature: pred.temperature,
-                    baseline: pred.temperature, // ML predictions don't have separate baseline
+                    baseline: baselineTemp, // Use actual baseline from database
                     confidence: mlPredictions.metrics.confidence,
                     upperBound: pred.temperature + 2,
                     lowerBound: pred.temperature - 2,
@@ -129,7 +132,7 @@ export function PredictionsChart({
                                    <span className="text-muted-foreground">Temperature:</span>
                                    <span className="font-semibold text-heat-extreme">{data.temperature}°C</span>
                               </div>
-                              {scenarioAdjustment && (
+                              {data.baseline !== undefined && data.baseline !== data.temperature && (
                                    <div className="flex items-center justify-between gap-4">
                                         <span className="text-muted-foreground">Baseline:</span>
                                         <span className="font-medium text-muted-foreground">{data.baseline}°C</span>

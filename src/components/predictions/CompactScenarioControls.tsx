@@ -17,6 +17,31 @@ export function CompactScenarioControls({ adjustment, onAdjustmentChange }: Comp
 
      return (
           <div className="space-y-4">
+               {/* Presets */}
+               <div className="grid grid-cols-3 gap-2 mb-4">
+                    <button
+                         onClick={() => onAdjustmentChange({ ndbi: -2, ndvi: -5, climate: 0 })}
+                         className="flex flex-col items-center gap-1.5 p-2 rounded-lg border border-border hover:border-eco/50 hover:bg-eco/5 transition-all group"
+                    >
+                         <div className="w-2.5 h-2.5 rounded-full bg-eco group-hover:scale-110 transition-transform" />
+                         <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">Green City</span>
+                    </button>
+                    <button
+                         onClick={() => onAdjustmentChange({ ndbi: 5, ndvi: 2, climate: 0.5 })}
+                         className="flex flex-col items-center gap-1.5 p-2 rounded-lg border border-border hover:border-heat-warm/50 hover:bg-heat-warm/5 transition-all group"
+                    >
+                         <div className="w-2.5 h-2.5 rounded-full bg-heat-warm group-hover:scale-110 transition-transform" />
+                         <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">Urban Growth</span>
+                    </button>
+                    <button
+                         onClick={() => onAdjustmentChange({ ndbi: 1, ndvi: -1, climate: 0 })}
+                         className="flex flex-col items-center gap-1.5 p-2 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                    >
+                         <div className="w-2.5 h-2.5 rounded-full bg-primary group-hover:scale-110 transition-transform" />
+                         <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">Balanced</span>
+                    </button>
+               </div>
+
                {/* Total Impact Display */}
                {isModified && (
                     <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-lg px-4 py-2">

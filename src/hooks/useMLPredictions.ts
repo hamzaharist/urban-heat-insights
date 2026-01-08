@@ -36,7 +36,7 @@ export function useMLPredictions({
 
                return await predictScenario(request);
           },
-          enabled: enabled && !!scenarioAdjustment,
+          enabled: enabled,  // Always fetch predictions, even without adjustments
           staleTime: 5 * 60 * 1000, // 5 minutes
           retry: 2,
      });

@@ -14,6 +14,17 @@ interface EnvironmentalTrends {
      riskProbability: number;
 }
 
+interface ModelInfo {
+     model_type: string;
+     r2_score: number;
+     train_mae: number;
+     test_mae: number;
+     features: string[];
+     description: string;
+}
+
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+
 export function MLInsightsPanel({ selectedCity }: MLInsightsPanelProps) {
      const { data: trends } = useQuery<EnvironmentalTrends>({
           queryKey: ['environmental-trends'],
@@ -24,10 +35,19 @@ export function MLInsightsPanel({ selectedCity }: MLInsightsPanelProps) {
           staleTime: Infinity,
      });
 
+     const { data: modelInfo } = useQuery<ModelInfo>({
+          queryKey: ['model-info'],
+          queryFn: async () => {
+               const response = await fetch(`${API_BASE_URL}/api/predict/model-info`);
+               return response.json();
+          },
+          staleTime: Infinity,
+     });
+
      const modelMetrics = {
-          type: 'Gradient Boosting',
-          r2Score: 0.621,
-          mae: 3.29,
+          type: modelInfo?.model_type || 'Random Forest',
+          r2Score: modelInfo?.r2_score || 0.867,
+          mae: modelInfo?.test_mae || 1.39,
      };
 
      const confidenceLevels = [

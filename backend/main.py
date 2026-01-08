@@ -10,7 +10,22 @@ from typing import Optional
 import os
 from dotenv import load_dotenv
 import ee
-from prediction_api import router as prediction_router, load_model
+# Import BOTH prediction APIs - Time-series (CatBoost) and Spatial (XGBoost)
+try:
+    from timeseries_prediction_api import router as timeseries_router, load_model as load_timeseries_model
+    print("[OK] Timeseries router imported successfully")
+except Exception as e:
+    print(f"[ERROR] Failed to import timeseries router: {e}")
+    timeseries_router = None
+    load_timeseries_model = lambda: None
+
+try:
+    from prediction_api import router as spatial_router, load_model as load_spatial_model
+    print("[OK] Spatial router imported successfully")
+except Exception as e:
+    print(f"[ERROR] Failed to import spatial router: {e}")
+    spatial_router = None
+    load_spatial_model = lambda: None
 
 # Load environment variables
 load_dotenv()
@@ -26,8 +41,17 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:8081",
         "http://localhost:8080",
+        "http://localhost:8081",
+        "http://localhost:8082",
+        "http://localhost:8083",
+        "http://localhost:8084",
+        "http://localhost:8085",
+        "http://localhost:8086",
+        "http://localhost:8087",
+        "http://localhost:8088",
+        "http://localhost:8089",
+        "http://localhost:8090",
         "https://*.vercel.app",  # All Vercel deployments
         "https://urban-heat-insights.vercel.app",  # Production URL
         os.getenv("FRONTEND_URL", "http://localhost:8081"),
@@ -37,8 +61,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include prediction router
-app.include_router(prediction_router)
+# Include BOTH prediction routers
+# Time-series predictions (CatBoost) - for future temperature forecasting
+if timeseries_router:
+    app.include_router(timeseries_router, prefix="/api/timeseries", tags=["Time-Series Predictions"])
+    print("[OK] Timeseries router included at /api/timeseries")
+else:
+    print("[ERROR] Timeseries router is None!")
+
+# Spatial predictions (XGBoost) - for current UHI analysis and AI consultant
+if spatial_router:
+    app.include_router(spatial_router, prefix="/api/spatial", tags=["Spatial Predictions & AI Consultant"])
+    print("[OK] Spatial router included at /api/spatial")
+else:
+    print("[ERROR] Spatial router is None!")
+
+# Include GeoJSON router
+from api.geojson import router as geojson_router
+app.include_router(geojson_router)
 
 # Initialize Google Earth Engine
 def initialize_gee():
@@ -62,17 +102,18 @@ def initialize_gee():
             # Try to initialize with default credentials
             ee.Initialize(project=project_id)
         
-        print(f"✓ Google Earth Engine initialized with project: {project_id}")
+        print(f"[OK] Google Earth Engine initialized with project: {project_id}")
         return True
     except Exception as e:
-        print(f"✗ Failed to initialize Google Earth Engine: {str(e)}")
+        print(f"[ERROR] Failed to initialize Google Earth Engine: {str(e)}")
         return False
 
 # Initialize GEE on startup
 @app.on_event("startup")
 async def startup_event():
     initialize_gee()
-    load_model()  # Load ML prediction model
+    load_timeseries_model()  # Load CatBoost time-series model
+    load_spatial_model()     # Load XGBoost spatial model
 
 # Pydantic models
 class LSTResponse(BaseModel):
@@ -269,5 +310,6 @@ async def generate_uhi_map(request: UHIMapRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 3003))  # Changed to 3003 to avoid conflicts
+    port = int(os.getenv("PORT", 8000))  # Use port 8000 as default
     uvicorn.run(app, host="0.0.0.0", port=port)
+

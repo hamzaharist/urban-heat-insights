@@ -1,13 +1,15 @@
-import { TrendingUp, TrendingDown, Minus, Thermometer, Activity, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Thermometer, Activity, CheckCircle2, Target } from 'lucide-react';
 
 interface PredictionMetricsProps {
      peakTemp: number;
      avgIncrease: number;
      trend: 'rising' | 'stable' | 'falling';
      confidence: number;
+     baselineTemp?: number;
+     firstYearTemp?: number;
 }
 
-export function PredictionMetrics({ peakTemp, avgIncrease, trend, confidence }: PredictionMetricsProps) {
+export function PredictionMetrics({ peakTemp, avgIncrease, trend, confidence, baselineTemp, firstYearTemp }: PredictionMetricsProps) {
      const getTrendIcon = () => {
           switch (trend) {
                case 'rising': return <TrendingUp className="w-5 h-5" />;
@@ -23,6 +25,9 @@ export function PredictionMetrics({ peakTemp, avgIncrease, trend, confidence }: 
                default: return 'text-yellow-500';
           }
      };
+
+     // Calculate baseline change if both values are provided
+     const baselineChange = baselineTemp && firstYearTemp ? firstYearTemp - baselineTemp : null;
 
      const metrics = [
           {
@@ -49,14 +54,27 @@ export function PredictionMetrics({ peakTemp, avgIncrease, trend, confidence }: 
           {
                icon: <CheckCircle2 className="w-5 h-5" />,
                label: 'Model Confidence',
-               value: `${confidence}%`,
+               value: `${(confidence * 100).toFixed(0)}%`,
                color: 'from-green-500/20 to-emerald-500/20 border-green-500/30',
                iconColor: 'text-green-500',
           },
      ];
 
+     // Add baseline comparison if available
+     if (baselineChange !== null) {
+          metrics.push({
+               icon: <Target className="w-5 h-5" />,
+               label: 'Change from Baseline',
+               value: baselineChange >= 0 ? `+${baselineChange.toFixed(1)}°C` : `${baselineChange.toFixed(1)}°C`,
+               color: baselineChange >= 0
+                    ? 'from-red-500/20 to-pink-500/20 border-red-500/30'
+                    : 'from-green-500/20 to-teal-500/20 border-green-500/30',
+               iconColor: baselineChange >= 0 ? 'text-red-500' : 'text-green-500',
+          });
+     }
+
      return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${baselineChange !== null ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-4 mb-6`}>
                {metrics.map((metric, index) => (
                     <div
                          key={index}

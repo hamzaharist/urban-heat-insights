@@ -1,0 +1,42 @@
+{
+  "model_type": "RandomForestRegressor",
+  "best_params": {
+    "n_estimators": 100,
+    "min_samples_split": 5,
+    "min_samples_leaf": 1,
+    "max_features": "sqrt",
+    "max_depth": 30,
+    "bootstrap": false
+  },
+  "features": [
+    "NDVI",
+    "NDBI",
+    "Elevation",
+    "Population"
+  ],
+  "training_samples": 62134,
+  "test_samples": 15534,
+  "baseline_r2": 0.9167482817534965,
+  "tuned_r2": 0.9414619401569037,
+  "baseline_rmse": 1.6457970404363054,
+  "tuned_rmse": 1.3800627580229297,
+  "tuning_time_seconds": 304.11955523490906,
+  "feature_importance": [
+    {
+      "Feature": "NDBI",
+      "Importance": 0.3821148870026724
+    },
+    {
+      "Feature": "NDVI",
+      "Importance": 0.2496121952258196
+    },
+    {
+      "Feature": "Population",
+      "Importance": 0.2256614223356032
+    },
+    {
+      "Feature": "Elevation",
+      "Importance": 0.14261149543590487
+    }
+  ]
+}

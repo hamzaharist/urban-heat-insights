@@ -70,7 +70,7 @@ const MapSection = ({ selectedCity, onCityChange }: MapSectionProps) => {
                 <AlertDescription>
                   <div>
                     <p className="font-semibold mb-2">Failed to load hotspot data</p>
-                    <p className="text-sm">{error.message}</p>
+                    <p className="text-sm">{errorAll.message}</p>
                   </div>
                 </AlertDescription>
               </Alert>

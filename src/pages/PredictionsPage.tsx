@@ -122,7 +122,7 @@ export function PredictionsPage() {
                <div className="relative flex-1 p-4 pt-20 pb-4 overflow-y-auto">
                     {/* Breadcrumbs */}
                     <div className="max-w-7xl mx-auto mb-4">
-                         <Breadcrumbs />
+                         <Breadcrumbs items={[{ label: 'Predictions' }]} />
                     </div>
 
                     {/* Page Title */}
@@ -232,13 +232,13 @@ export function PredictionsPage() {
                                         Scenarios
                                    </label>
                                    <Button
-                                        variant="outline"
+                                        variant={scenariosExpanded ? "secondary" : "outline"}
                                         size="sm"
-                                        onClick={() => navigate(`/scenarios/${selectedCity.toLowerCase().replace(' ', '-')}`)}
+                                        onClick={() => setScenariosExpanded(!scenariosExpanded)}
                                         className="w-full"
                                    >
                                         <Sliders className="w-4 h-4 mr-2" />
-                                        Run What-If Scenario
+                                        {scenariosExpanded ? "Hide Scenarios" : "Future Scenarios"}
                                    </Button>
                               </div>
 
@@ -262,33 +262,35 @@ export function PredictionsPage() {
                                         </DialogContent>
                                    </Dialog>
                               </div>
-                         </ControlBarGrid>
+                         </ControlBarGrid >
 
                          {/* Expandable Scenarios Section */}
-                         {scenariosExpanded && (
-                              <div className="pt-4 border-t border-border/30 animate-in slide-in-from-bottom-4 duration-300">
-                                   <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-sm font-semibold text-foreground">Scenario Simulation</h3>
-                                        {isModified && (
-                                             <Button
-                                                  variant="ghost"
-                                                  size="sm"
-                                                  onClick={handleReset}
-                                                  className="h-7 text-xs"
-                                             >
-                                                  <RotateCcw className="w-3 h-3 mr-1" />
-                                                  Reset
-                                             </Button>
-                                        )}
+                         {
+                              scenariosExpanded && (
+                                   <div className="pt-4 border-t border-border/30 animate-in slide-in-from-bottom-4 duration-300">
+                                        <div className="flex items-center justify-between mb-4">
+                                             <h3 className="text-sm font-semibold text-foreground">Scenario Simulation</h3>
+                                             {isModified && (
+                                                  <Button
+                                                       variant="ghost"
+                                                       size="sm"
+                                                       onClick={handleReset}
+                                                       className="h-7 text-xs"
+                                                  >
+                                                       <RotateCcw className="w-3 h-3 mr-1" />
+                                                       Reset
+                                                  </Button>
+                                             )}
+                                        </div>
+                                        <CompactScenarioControls
+                                             adjustment={scenarioAdjustment}
+                                             onAdjustmentChange={setScenarioAdjustment}
+                                        />
                                    </div>
-                                   <CompactScenarioControls
-                                        adjustment={scenarioAdjustment}
-                                        onAdjustmentChange={setScenarioAdjustment}
-                                   />
-                              </div>
-                         )}
-                    </div>
-               </BottomControlBar>
-          </div>
+                              )
+                         }
+                    </div >
+               </BottomControlBar >
+          </div >
      );
 }
