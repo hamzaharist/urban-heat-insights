@@ -272,8 +272,8 @@ const ScenarioPage = () => {
 
       console.log('[ScenarioPage] API request body:', requestBody);
 
-      // FIXED: Use correct port (8001) and endpoint (/api/predictions/scenario-single)
-      const response = await fetch("http://localhost:8001/api/predictions/scenario-single", {
+      // FIXED: Use correct port (8000) and endpoint (/api/spatial/scenario-single)
+      const response = await fetch("http://localhost:8000/api/spatial/scenario-single", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody)
