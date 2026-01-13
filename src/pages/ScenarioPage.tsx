@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ChoroplethMap } from "@/components/choropleth/ChoroplethMap";
 import { useDistrictHeatmap } from "@/hooks/useDistrictHeatmap";
+import { SearchableLocationSelector } from "@/components/SearchableLocationSelector";
 
 interface KPIData {
   nationalAvg: number;
@@ -210,13 +211,27 @@ const ScenarioPage = () => {
       });
 
       if (!feature) {
-        console.warn('[ScenarioPage] District not found in GeoJSON:', district);
+        console.error('[ScenarioPage] District not found in GeoJSON:', district);
+        alert(`District "${district}" not found. Please select another location.`);
         setLoading(false);
         return;
       }
 
       const props = feature.properties;
       console.log('[ScenarioPage] Found district in GeoJSON:', props);
+
+      // Validate that we have the required data
+      if (!props.avg_temperature || props.avg_temperature === 0) {
+        console.error('[ScenarioPage] District has no temperature data:', district);
+        alert(`No temperature data available for "${district}". Please select another location.`);
+        setLoading(false);
+        return;
+      }
+
+      if (props.avg_ndvi == null || props.avg_ndbi == null) {
+        console.warn('[ScenarioPage] District has incomplete index data:', district);
+        // Continue anyway but with default values
+      }
 
       setDistrictData({
         name: district,
@@ -235,6 +250,19 @@ const ScenarioPage = () => {
     }
   };
 
+
+  // Normalize district names to match backend expectations
+  const normalizeDistrictName = (districtName: string): string => {
+    // Map GeoJSON names to backend API names
+    const nameMapping: Record<string, string> = {
+      "W.P. Kuala Lumpur": "Kuala Lumpur",
+      "W.P. Putrajaya": "Putrajaya",
+      "W.P. Labuan": "Labuan"
+      // Add more mappings as needed
+    };
+
+    return nameMapping[districtName] || districtName;
+  };
 
   const fetchTrendData = async () => {
     // Mock trend data (2015-2024)
@@ -264,13 +292,17 @@ const ScenarioPage = () => {
     console.log('[ScenarioPage] District data:', districtData);
 
     try {
+      // Normalize district name for backend API
+      const normalizedDistrictName = normalizeDistrictName(selectedDistrict);
+
       const requestBody = {
-        city: selectedDistrict,
+        city: normalizedDistrictName,
         ndvi_change: ndviAdjustment,
         ndbi_change: ndbiAdjustment
       };
 
       console.log('[ScenarioPage] API request body:', requestBody);
+      console.log('[ScenarioPage] Original district:', selectedDistrict, '→ Normalized:', normalizedDistrictName);
 
       // FIXED: Use correct port (8000) and endpoint (/api/spatial/scenario-single)
       const response = await fetch("http://localhost:8000/api/spatial/scenario-single", {
@@ -291,9 +323,11 @@ const ScenarioPage = () => {
       } else {
         const errorText = await response.text();
         console.error('[ScenarioPage] Prediction API error:', response.status, errorText);
+        alert(`❌ Prediction failed (${response.status}):\n\n${errorText}\n\nOriginal district: ${selectedDistrict}\nNormalized to: ${normalizeDistrictName(selectedDistrict)}\n\nCheck browser Console (F12) for details.`);
       }
     } catch (error) {
       console.error("[ScenarioPage] Error running simulation:", error);
+      alert(`❌ Error running prediction:\n${error}\n\nDistrict: ${selectedDistrict}\nNormalized: ${normalizeDistrictName(selectedDistrict)}\n\nCheck browser Console (F12) for details.`);
     }
   };
 
@@ -350,20 +384,16 @@ const ScenarioPage = () => {
                 <h2 className="font-semibold text-slate-900">Select Location</h2>
               </div>
 
-              <select
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {districtGeoJSON?.features
-                  .map(f => f.properties.name)
-                  .filter(name => name)
-                  .sort()
-                  .map(name => (
-                    <option key={name} value={name}>{name}</option>
-                  ))
+              <SearchableLocationSelector
+                locations={
+                  districtGeoJSON?.features
+                    .map((f) => f.properties.name)
+                    .filter((name) => name)
+                    .sort() || []
                 }
-              </select>
+                selectedLocation={selectedDistrict}
+                onLocationChange={setSelectedDistrict}
+              />
 
               {districtData && (
                 <div className="mt-4 p-4 bg-slate-50 rounded-lg space-y-2 text-sm">

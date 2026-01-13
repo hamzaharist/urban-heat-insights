@@ -68,7 +68,7 @@ export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlight
 
           // Find the feature matching the highlighted district name
           const feature = data.features.find((f: any) => {
-               const name = f.properties?.district_name || f.properties?.name || f.properties?.state_name;
+               const name = f.properties?.name || f.properties?.district_name || f.properties?.state_name;
                return name === highlightedDistrict;
           });
 
