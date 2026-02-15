@@ -283,6 +283,129 @@ def get_available_locations():
     except Exception as e:
         return {"locations": [], "error": str(e)}
 
+@router.get("/model-validation")
+async def get_model_validation():
+    """
+    Returns model prediction vs actual comparison data from 2025 test set
+    for confidence visualization.
+    
+    Uses Malaysia_UHI_2025_Only.csv - actual 2025 data for real validation
+    """
+    try:
+        if not model:
+            return {"error": "Model not loaded"}
+        
+        # Load 2025 test data from CSV
+        test_data_path = Path(__file__).parent / "data" / "Malaysia_UHI_2025_Only.csv"
+        
+        if not test_data_path.exists():
+            return {"error": f"Test data file not found at {test_data_path}"}
+        
+        # Read test data
+        test_df = pd.read_csv(test_data_path)
+        
+        # FILTER OUTLIERS - Remove physically impossible values
+        print(f"Original 2025 data: {len(test_df):,} records")
+        
+        # Apply realistic filters
+        test_df_clean = test_df[
+            (test_df['LST'] >= 15) &      # Minimum realistic temp for Malaysia
+            (test_df['LST'] <= 50) &      # Maximum realistic temp
+            (test_df['NDVI'] >= 0) &      # Valid NDVI range
+            (test_df['NDVI'] <= 1) &
+            (test_df['NDBI'] >= -1) &     # Valid NDBI range  
+            (test_df['NDBI'] <= 1) &
+            (test_df['Elevation'] >= -100) &  # Valid elevation (sea level +/-)
+            (test_df['Population'] >= 0)      # Valid population
+        ].copy()
+        
+        print(f"After filtering outliers: {len(test_df_clean):,} records")
+        print(f"Removed {len(test_df) - len(test_df_clean):,} outliers ({(len(test_df) - len(test_df_clean))/len(test_df)*100:.1f}%)")
+        
+        # Sample ~100 random rows for visualization performance
+        if len(test_df_clean) > 100:
+            test_sample = test_df_clean.sample(n=100, random_state=42)
+        else:
+            test_sample = test_df_clean
+        
+        validation_data = []
+        for _, row in test_sample.iterrows():
+            # Get actual temperature (LST column)
+            actual_temp = row.get('LST')
+            if actual_temp is None or pd.isna(actual_temp):
+                continue
+            
+            # Prepare features for prediction (must match training: NDVI, NDBI, Elevation, Population)
+            input_features = pd.DataFrame([{
+                'NDVI': row.get('NDVI', 0.5),
+                'NDBI': row.get('NDBI', 0.0),
+                'Elevation': row.get('Elevation', 100),
+                'Population': row.get('Population', 100000)
+            }])
+            
+            # Generate prediction
+            try:
+                predicted_temp = float(model.predict(input_features)[0])
+                error = abs(predicted_temp - actual_temp)
+                
+                validation_data.append({
+                    'district': row.get('ADM2_NAME', 'Unknown'),
+                    'state': row.get('ADM1_NAME', ''),
+                    'actual_temp': round(float(actual_temp), 2),
+                    'predicted_temp': round(predicted_temp, 2),
+                    'error': round(error, 2)
+                })
+            except Exception as pred_error:
+                print(f"Prediction error for row: {pred_error}")
+                continue
+        
+        # Calculate aggregate metrics
+        if validation_data:
+            actuals = [d['actual_temp'] for d in validation_data]
+            predictions = [d['predicted_temp'] for d in validation_data]
+            errors = [d['error'] for d in validation_data]
+            
+            # R² score calculation
+            import numpy as np
+            ss_res = sum((a - p) ** 2 for a, p in zip(actuals, predictions))
+            ss_tot = sum((a - np.mean(actuals)) ** 2 for a in actuals)
+            r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
+            
+            # Other metrics
+            rmse = (sum(e ** 2 for e in errors) / len(errors)) ** 0.5
+            mae = sum(errors) / len(errors)
+            
+            return {
+                "validation_data": validation_data,
+                "metrics": {
+                    "r2_score": round(r2, 4),
+                    "rmse": round(rmse, 2),
+                    "mae": round(mae, 2),
+                    "sample_size": len(validation_data)
+                },
+                "model_info": {
+                    "model_type": "Random Forest Regressor (Tuned)",
+                    "training_r2": 0.9415,
+                    "training_rmse": 1.38
+                },
+                "test_data_info": {
+                    "source": "Malaysia_UHI_2025_Only.csv",
+                    "year": 2025,
+                    "total_records": len(test_df),
+                    "clean_records": len(test_df_clean),
+                    "outliers_removed": len(test_df) - len(test_df_clean),
+                    "description": "2025 satellite data with outlier filtering (LST: 15-50°C, valid indices)"
+                }
+            }
+        
+        return {"error": "No validation data generated"}
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in model validation: {traceback.format_exc()}")
+        return {"error": str(e)}
+
+
 @router.post("/scenario-single", response_model=ScenarioResponse)
 async def predict_scenario_single(request: ScenarioRequest):
     """

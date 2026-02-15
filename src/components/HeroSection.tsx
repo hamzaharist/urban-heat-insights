@@ -75,13 +75,6 @@ const HeroSection = () => {
             <Button
               variant="heroOutline"
               size="xl"
-              onClick={() => navigate('/heatmap')}
-            >
-              Explore Heat Maps
-            </Button>
-            <Button
-              variant="heroOutline"
-              size="xl"
               onClick={() => navigate('/scenarios')}
             >
               View Future Scenarios
