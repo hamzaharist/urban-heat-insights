@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Map, { Source, Layer, MapRef, Popup } from 'react-map-gl';
 import type { FillLayer } from 'react-map-gl';
 import mapboxgl from 'mapbox-gl';
@@ -7,22 +7,68 @@ import { useDistrictHeatmap } from '@/hooks/useDistrictHeatmap';
 import { Loader2 } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
+// Create a diagonal stripe pattern image
+const createStripePattern = (): HTMLCanvasElement => {
+     const size = 16;
+     const canvas = document.createElement('canvas');
+     canvas.width = size;
+     canvas.height = size;
+     const ctx = canvas.getContext('2d')!;
+
+     // Transparent background
+     ctx.clearRect(0, 0, size, size);
+
+     // Draw diagonal stripes
+     ctx.strokeStyle = 'rgba(100, 116, 139, 0.6)'; // slate color
+     ctx.lineWidth = 2;
+
+     // Draw multiple diagonal lines
+     for (let i = -size; i < size * 2; i += 6) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i + size, size);
+          ctx.stroke();
+     }
+
+     return canvas;
+};
+
 interface ChoroplethMapProps {
      level: 'states' | 'districts';
      onHoverChange?: (data: any) => void;
      onLocationClick?: (data: any) => void;
      highlightedDistrict?: string | null;
+     temperatureFilter?: [number, number];
 }
 
-export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlightedDistrict }: ChoroplethMapProps) {
+export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlightedDistrict, temperatureFilter = [20, 45] }: ChoroplethMapProps) {
      const { data: statesData, isLoading: isLoadingStates } = useStateHeatmap();
      const { data: districtsData, isLoading: isLoadingDistricts } = useDistrictHeatmap();
 
      const [hoveredFeature, setHoveredFeature] = useState<any>(null);
      const [selectedFeature, setSelectedFeature] = useState<any>(null);
      const [mapStyleLoaded, setMapStyleLoaded] = useState(false);
+     const [stripePatternReady, setStripePatternReady] = useState(false);
      const [popupInfo, setPopupInfo] = useState<{ longitude: number; latitude: number; name: string; temp: number } | null>(null);
      const mapRef = useRef<MapRef>(null);
+
+     // Add stripe pattern to map
+     const addStripePattern = useCallback((map: mapboxgl.Map) => {
+          if (map.hasImage('stripe-pattern')) {
+               setStripePatternReady(true);
+               return;
+          }
+
+          const canvas = createStripePattern();
+          const imageData = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height);
+
+          map.addImage('stripe-pattern', {
+               width: canvas.width,
+               height: canvas.height,
+               data: imageData.data
+          });
+          setStripePatternReady(true);
+     }, []);
 
      const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -54,7 +100,7 @@ export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlight
                     );
                }
           } catch (error) {
-               console.warn('[ChoroplethMap] Error setting feature state:', error);
+               // Feature state error - non-critical
           }
      }, [selectedFeature, level, data, mapStyleLoaded]);
 
@@ -97,8 +143,9 @@ export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlight
 
                          // Get center coordinates for popup
                          const center = bounds.getCenter();
-                         const districtName = feature.properties?.district_name || feature.properties?.name || feature.properties?.state_name || 'Unknown';
-                         const temperature = feature.properties?.avg_temperature || 0;
+                         const props = feature.properties as any;
+                         const districtName = props?.district_name || props?.name || props?.state_name || 'Unknown';
+                         const temperature = props?.avg_temperature || 0;
 
                          setPopupInfo({
                               longitude: center.lng,
@@ -115,9 +162,8 @@ export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlight
                               maxZoom: 10 // Don't zoom in too close
                          });
 
-                         console.log('[ChoroplethMap] Flying to district:', highlightedDistrict);
                     } catch (error) {
-                         console.warn('[ChoroplethMap] Error flying to district:', error);
+                         // Fly-to error - non-critical
                     }
                }
           }
@@ -159,39 +205,12 @@ export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlight
      // Always use baseline temperature
      const temperatureProperty = 'avg_temperature';
 
-     // Debug: Log temperature data
-     console.log(`[ChoroplethMap] Loaded ${data.features.length} ${level}`);
-     const sampleFeature = data.features[0];
-     console.log('[ChoroplethMap] Sample feature:', {
-          id: sampleFeature.id,
-          name: sampleFeature.properties?.name,
-          temp: sampleFeature.properties?.avg_temperature,
-          allProps: Object.keys(sampleFeature.properties || {}),
-          rawProps: sampleFeature.properties
-     });
-     console.log('[ChoroplethMap] Temperature property:', temperatureProperty);
-     console.log('[ChoroplethMap] First 5 temps:', data.features.slice(0, 5).map((f: any) => ({
-          name: f.properties?.name,
-          temp: f.properties?.avg_temperature
-     })));
-
-     // Log temperature range
-     const temps = data.features.map((f: any) => f.properties?.avg_temperature).filter((t: any) => t != null);
-     console.log('[ChoroplethMap] Temperature range:', {
-          min: Math.min(...temps),
-          max: Math.max(...temps),
-          count: temps.length
-     });
-
      // Ensure all features have numeric temperature values
      const enrichedData = {
           ...data,
           type: 'FeatureCollection' as const,
-          features: data.features.map((feature: any, idx: number) => {
+          features: data.features.map((feature: any) => {
                const temp = feature.properties?.avg_temperature;
-               if (idx < 3) {
-                    console.log(`[ChoroplethMap] Feature ${idx} temp:`, temp, typeof temp);
-               }
                return {
                     ...feature,
                     properties: {
@@ -202,35 +221,54 @@ export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlight
           })
      };
 
-     // Create fill layer with data-driven colors
+     // Create fill layer with data-driven colors and temperature filter
+     const [minTemp, maxTemp] = temperatureFilter;
+
      const fillLayer: FillLayer = {
           id: `${level}-fill`,
           type: 'fill',
           source: level,
           paint: {
                'fill-color': [
-                    'interpolate',
-                    ['linear'],
-                    ['coalesce', ['get', 'avg_temperature'], 0],
-                    0, '#475569',     // gray for missing/zero
-                    24, '#14b8a6',    // teal - coolest
-                    26, '#10b981',    // green
-                    28, '#22c55e',
-                    30, '#84cc16',    // lime
-                    32, '#eab308',    // yellow
-                    34, '#f59e0b',    // amber
-                    36, '#f97316',    // orange
-                    38, '#dc2626',    // red
-                    40, '#991b1b',
-                    42, '#7f1d1d',    // dark red - hottest
-               ],
+                    'case',
+                    // No data: distinct lighter color visible against dark map
+                    ['==', ['coalesce', ['get', 'avg_temperature'], 0], 0],
+                    '#94a3b8',     // light slate for no-data (clearly distinguishable)
+                    // Outside filter range: gray out
+                    ['any',
+                         ['<', ['get', 'avg_temperature'], minTemp],
+                         ['>', ['get', 'avg_temperature'], maxTemp]
+                    ],
+                    '#475569',     // darker slate for filtered out regions
+                    // Temperature color ramp for valid data within filter range
+                    ['interpolate',
+                         ['linear'],
+                         ['get', 'avg_temperature'],
+                         24, '#14b8a6',    // teal - coolest
+                         26, '#10b981',    // green
+                         28, '#22c55e',
+                         30, '#84cc16',    // lime
+                         32, '#eab308',    // yellow
+                         34, '#f59e0b',    // amber
+                         36, '#f97316',    // orange
+                         38, '#dc2626',    // red
+                         40, '#991b1b',
+                         42, '#7f1d1d',    // dark red - hottest
+                    ]],
                'fill-opacity': [
                     'case',
+                    // Outside filter range: lower opacity
+                    ['any',
+                         ['==', ['coalesce', ['get', 'avg_temperature'], 0], 0],
+                         ['<', ['get', 'avg_temperature'], minTemp],
+                         ['>', ['get', 'avg_temperature'], maxTemp]
+                    ],
+                    0.3,
                     ['boolean', ['feature-state', 'selected'], false],
                     0.9,  // Higher opacity for selected
                     ['boolean', ['feature-state', 'hover'], false],
                     0.8,
-                    0.6
+                    0.7
                ],
           },
      };
@@ -253,6 +291,29 @@ export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlight
                     ['boolean', ['feature-state', 'hover'], false],
                     2,
                     0.5
+               ],
+          },
+     };
+
+     // Stripe pattern overlay for filtered-out regions
+     const stripeLayer: FillLayer = {
+          id: `${level}-stripes`,
+          type: 'fill',
+          source: level,
+          paint: {
+               'fill-pattern': 'stripe-pattern',
+               'fill-opacity': [
+                    'case',
+                    // Only show stripes for regions outside filter range (with valid data)
+                    ['all',
+                         ['!=', ['coalesce', ['get', 'avg_temperature'], 0], 0],
+                         ['any',
+                              ['<', ['get', 'avg_temperature'], minTemp],
+                              ['>', ['get', 'avg_temperature'], maxTemp]
+                         ]
+                    ],
+                    0.5,
+                    0  // Hide stripes for regions within filter range or no data
                ],
           },
      };
@@ -303,13 +364,17 @@ export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlight
                }}
                onClick={onClick}
                onLoad={() => {
-                    console.log('[ChoroplethMap] Map style loaded');
                     setMapStyleLoaded(true);
+                    const map = mapRef.current?.getMap();
+                    if (map) {
+                         addStripePattern(map);
+                    }
                }}
                key={level}
           >
                <Source id={level} type="geojson" data={enrichedData}>
                     <Layer {...fillLayer} />
+                    {stripePatternReady && <Layer {...stripeLayer} />}
                     <Layer {...lineLayer} />
                </Source>
 
