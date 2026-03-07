@@ -1,5 +1,5 @@
-import { Cloud, Droplets, Wind, Clock } from "lucide-react";
-import { useCurrentWeather } from "@/hooks/useCurrentWeather";
+import { Cloud, Droplets, Wind, Clock, Info } from "lucide-react";
+import { useCurrentWeather, isCitySupported } from "@/hooks/useCurrentWeather";
 
 interface CurrentWeatherWidgetProps {
      city: string;
@@ -75,6 +75,12 @@ const CurrentWeatherWidget = ({ city }: CurrentWeatherWidgetProps) => {
                     <p className="text-xs text-muted-foreground">
                          Live data from Open-Meteo API
                     </p>
+                    {!isCitySupported(city) && (
+                         <p className="text-xs text-amber-500/80 mt-1 flex items-center gap-1">
+                              <Info className="w-3 h-3" />
+                              Showing nearest available data (Kuala Lumpur)
+                         </p>
+                    )}
                </div>
           </div>
      );

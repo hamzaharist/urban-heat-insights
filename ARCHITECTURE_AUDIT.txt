@@ -1,0 +1,569 @@
+================================================================================
+                    ARCHITECTURE AUDIT REPORT
+                    Urban Heat Insights
+                    Generated: 2026-03-07
+================================================================================
+
+================================================================================
+1. TECH STACK SUMMARY
+================================================================================
+
+Layer              | Technology
+-------------------|------------------------------------------------------------
+Frontend           | React 18.3.1 + TypeScript + Vite 5.4.19 + TailwindCSS 3.4.17
+Backend            | Python 3.12 + FastAPI 0.109.0 + Uvicorn 0.27.0
+Database           | Supabase (PostgreSQL) with RLS enabled
+ML Models          | scikit-learn 1.4.0 (Random Forest) + XGBoost 2.0.3 + CatBoost
+Mapping            | Mapbox GL JS 3.17.0 + Leaflet 1.9.4 + react-map-gl 7.1.7
+Satellite Data     | Google Earth Engine API (earthengine-api 0.1.398)
+State Management   | TanStack React Query 5.83.0
+Deployment         | Railway (Nixpacks builder)
+
+================================================================================
+2. COMPONENT INVENTORY
+================================================================================
+
+------------------------------------------------------------------------------
+BACKEND MODULES
+------------------------------------------------------------------------------
+
+Module                       | File                                    | Responsibility
+-----------------------------|----------------------------------------|------------------------------------------
+main.py                      | backend/main.py                        | FastAPI app init, CORS, GEE integration, LST/NDVI/UHI endpoints
+prediction_api.py            | backend/prediction_api.py              | Spatial ML predictions (Random Forest), scenario simulation, diagnostics
+timeseries_prediction_api.py | backend/timeseries_prediction_api.py   | Time-series predictions with population/urbanization projections
+geojson.py                   | backend/api/geojson.py                 | GeoJSON endpoints for choropleth maps, enriches data from Supabase
+
+------------------------------------------------------------------------------
+FRONTEND PAGES
+------------------------------------------------------------------------------
+
+Page           | File                          | Responsibility
+---------------|-------------------------------|--------------------------------------------------
+Index          | src/pages/Index.tsx           | Landing page: Hero, Problem, Technology, Map, Predictions, Scenarios
+HeatMapPage    | src/pages/HeatMapPage.tsx     | Full-screen interactive heatmap with layer switching
+ChoroplethPage | src/pages/ChoroplethPage.tsx  | State/district choropleth temperature visualization
+ScenarioPage   | src/pages/ScenarioPage.tsx    | "What-if" scenario simulator dashboard
+
+------------------------------------------------------------------------------
+FRONTEND COMPONENTS
+------------------------------------------------------------------------------
+
+Component                    | File                                           | Responsibility
+-----------------------------|------------------------------------------------|------------------------------------------
+ChoroplethMap                | src/components/choropleth/ChoroplethMap.tsx    | Mapbox-based choropleth with temperature color ramp
+InteractiveMap               | src/components/InteractiveMap.tsx              | Heatmap visualization with NDVI/NDBI/Temperature layers
+SearchableLocationSelector   | src/components/SearchableLocationSelector.tsx  | Animated searchable dropdown for district selection
+
+------------------------------------------------------------------------------
+DATA HOOKS (React Query)
+------------------------------------------------------------------------------
+
+Hook                | File                           | Data Source
+--------------------|--------------------------------|------------------------------------------
+useHotspots         | src/hooks/useHotspots.ts       | Supabase `hotspots` table + optional ML API
+usePredictions      | src/hooks/usePredictions.ts    | Supabase `predictions` table
+useDistrictHeatmap  | src/hooks/useDistrictHeatmap.ts| Backend /api/geojson/districts?enrich=true
+useStateHeatmap     | src/hooks/useStateHeatmap.ts   | Backend /api/geojson/states?enrich=true
+useMLPredictions    | src/hooks/useMLPredictions.ts  | Backend /api/predict-scenario
+
+------------------------------------------------------------------------------
+ML MODELS
+------------------------------------------------------------------------------
+
+Model            | File                                          | Type                    | Metrics
+-----------------|-----------------------------------------------|-------------------------|------------------
+Spatial (Tuned)  | backend/models/uhi_rf_model_tuned.pkl         | RandomForestRegressor   | R2=0.9415, RMSE=1.38
+Time-series      | backend/models/timeseries_temperature_model.pkl| CatBoost               | Population/urbanization-aware
+Baseline         | backend/models/uhi_rf_model_baseline.pkl      | RandomForestRegressor   | R2=0.9167
+XGBoost          | backend/models/xgboost_temperature_model.pkl  | XGBoost                 | Alternative spatial model
+
+================================================================================
+3. DEPENDENCY GRAPH (Text)
+================================================================================
+
+Frontend (React/Vite)
+    |
+    +-- supabase-js --> Supabase PostgreSQL [direct DB queries]
+    |       |
+    |       +-- Tables: hotspots, predictions, temperature_readings
+    |
+    +-- fetch() --> Backend FastAPI [HTTP/REST]
+            |
+            +-- /api/geojson/* --> GeoJSON files + Supabase enrichment
+            +-- /api/gee/* --> Google Earth Engine
+            +-- /api/spatial/* --> Random Forest Model --> Supabase baseline
+            +-- /api/timeseries/* --> CatBoost Model --> Supabase baseline
+
+Backend FastAPI
+    |
+    +-- joblib --> ML Model artifacts (.pkl files)
+    +-- supabase-py --> Supabase PostgreSQL [baseline data queries]
+    +-- ee (earthengine-api) --> Google Earth Engine [satellite imagery]
+
+Database Schema (Supabase PostgreSQL)
+    |
+    +-- hotspots (id, city, name, lat, lon, avg_temperature, intensity, avg_ndvi, avg_ndbi, district_name, state_name, elevation, population)
+    +-- predictions (id, city, year, predicted_temp, confidence_level)
+    +-- temperature_readings (id, city, lat, lon, temperature, recorded_at, source)
+    +-- district_aggregates (pre-computed aggregations for performance)
+
+------------------------------------------------------------------------------
+COMPONENT DEPENDENCIES
+------------------------------------------------------------------------------
+
+App.tsx --> QueryClientProvider --> BrowserRouter
+    |
+    +-- Index --> Navbar, HeroSection, MapSection, PredictionSection, ScenarioSection
+    |       |
+    |       +-- MapSection --> InteractiveMap --> Mapbox GL
+    |       +-- PredictionSection --> useHotspots, usePredictions --> Supabase
+    |
+    +-- HeatMapPage --> InteractiveMap, FloatingPanel, StatisticsPanel
+    |       +-- useAllHotspots --> Backend API or Supabase
+    |
+    +-- ChoroplethPage --> ChoroplethMap --> useStateHeatmap, useDistrictHeatmap
+    |       +-- API: /api/geojson/{states|districts}?enrich=true
+    |
+    +-- ScenarioPage --> ChoroplethMap, SearchableLocationSelector
+            +-- API: /api/spatial/scenario-single --> Random Forest Model
+
+================================================================================
+4. DATA FLOW DIAGRAMS (3 Key Flows)
+================================================================================
+
+------------------------------------------------------------------------------
+FLOW 1: Heatmap Visualization (Supabase Direct)
+------------------------------------------------------------------------------
+
+User opens /heatmap
+    |
+    v
+HeatMapPage renders
+    |
+    v
+useAllHotspots(useAI=false) executes
+    |
+    v
+supabase.from('hotspots').select('*')
+    |
+    v
+PostgreSQL returns hotspot rows
+    |
+    v
+Data transformed to HotspotData[]
+    |
+    v
+InteractiveMap renders Mapbox heatmap layer
+
+------------------------------------------------------------------------------
+FLOW 2: Scenario "What-If" Prediction
+------------------------------------------------------------------------------
+
+User adjusts NDVI slider on /scenarios
+    |
+    v
+ScenarioPage calls runSimulation()
+    |
+    v
+POST /api/spatial/scenario-single
+    body: { city, ndvi_change, ndbi_change }
+    |
+    v
+prediction_api.py:predict_scenario_single()
+    |
+    +-- get_location_baseline(city) --> Supabase query
+    |       +-- Returns: NDVI, NDBI, elevation, population, base_temp
+    |
+    +-- Create modified feature DataFrame
+    |       +-- Apply user adjustments to NDVI/NDBI
+    |
+    +-- model.predict(input_features)
+            |
+            v
+        RandomForest returns predicted_temp
+            |
+            v
+        Response: { original_temp, predicted_temp, temp_difference }
+            |
+            v
+        ScenarioPage displays result card
+
+------------------------------------------------------------------------------
+FLOW 3: Choropleth Map with Enriched Data
+------------------------------------------------------------------------------
+
+User opens /choropleth (districts view)
+    |
+    v
+ChoroplethMap renders with level="districts"
+    |
+    v
+useDistrictHeatmap() executes
+    |
+    v
+GET /api/geojson/districts?enrich=true
+    |
+    v
+geojson.py:get_districts()
+    |
+    +-- Load GeoJSON: malaysia_districts_filtered.geojson
+    |
+    +-- Enrich from Supabase:
+            SELECT * FROM district_aggregates
+            |
+            v
+        Match GeoJSON features to DB rows (fuzzy name matching)
+            |
+            v
+        Inject avg_temperature, avg_ndvi, avg_ndbi into properties
+    |
+    v
+Return enriched FeatureCollection
+    |
+    v
+ChoroplethMap renders with data-driven fill colors
+
+================================================================================
+5. EXTERNAL INTEGRATIONS MAP
+================================================================================
+
++-------------------------------------------------------------------+
+|                     URBAN HEAT INSIGHTS                           |
++-----------------------------------------------------------------+
+|                                                                   |
+|   +-----------+          +-----------+                           |
+|   | Frontend  |<-------->|  Backend  |                           |
+|   |  (Vite)   |   HTTP   | (FastAPI) |                           |
+|   +-----+-----+          +-----+-----+                           |
+|         |                      |                                 |
++---------+----------------------+----------------------------------+
+          |                      |
+          v                      v
++------------------+    +----------------------+
+|     Supabase     |    |  Google Earth Engine |
+|   (PostgreSQL)   |    |   (Satellite Data)   |
+|  ---------------  |    |  ------------------- |
+|  * hotspots      |    |  * Landsat 8/9 LST   |
+|  * predictions   |    |  * NDVI calculation  |
+|  * district_agg  |    |  * UHI map tiles     |
++------------------+    +----------------------+
+
++------------------+    +----------------------+
+|     Mapbox       |    |    Open-Meteo        |
+|   (Map Tiles)    |    |   (Weather API)      |
+|  ---------------  |    |  ------------------- |
+|  * dark-v11 style|    |  * Current weather   |
+|  * Geocoding     |    |  * Historical data   |
++------------------+    +----------------------+
+
++------------------+
+|     Railway      |
+|   (Deployment)   |
+|  ---------------  |
+|  * Backend host  |
+|  * Auto-scaling  |
++------------------+
+
+================================================================================
+6. API ENDPOINT INVENTORY
+================================================================================
+
+------------------------------------------------------------------------------
+BACKEND ROUTES
+------------------------------------------------------------------------------
+
+Method | Path                                  | Handler                        | Auth | Description
+-------|---------------------------------------|--------------------------------|------|--------------------------------
+GET    | /                                     | root()                         | None | Health check
+GET    | /api/gee/lst                          | get_land_surface_temperature() | None | LST from Landsat 9
+GET    | /api/gee/ndvi                         | get_ndvi()                     | None | NDVI from Landsat 9
+POST   | /api/gee/uhi-map                      | generate_uhi_map()             | None | UHI map tile URL
+GET    | /api/geojson/states                   | get_states()                   | None | States GeoJSON
+GET    | /api/geojson/districts                | get_districts()                | None | Districts GeoJSON
+GET    | /api/spatial/model-info               | get_model_info()               | None | Model metadata
+GET    | /api/spatial/locations                | get_available_locations()      | None | District list
+GET    | /api/spatial/model-validation         | get_model_validation()         | None | 2025 validation data
+POST   | /api/spatial/scenario-single          | predict_scenario_single()      | None | Single location prediction
+POST   | /api/spatial/diagnose                 | diagnose_heat_drivers()        | None | Heat driver analysis
+POST   | /api/spatial/prescribe                | prescribe_cooling_solution()   | None | Target NDVI for cooling
+POST   | /api/spatial/scenario                 | calculate_scenario_temperatures| None | All districts prediction
+POST   | /api/timeseries/api/predict-scenario  | predict_timeseries_scenario()  | None | Time-series forecast
+GET    | /api/timeseries/api/predict/model-info| get_timeseries_model_info()    | None | Timeseries model info
+
+------------------------------------------------------------------------------
+ENVIRONMENT VARIABLES REFERENCED
+------------------------------------------------------------------------------
+
+Variable                        | Used In          | Purpose
+--------------------------------|------------------|----------------------------------
+VITE_SUPABASE_URL               | Frontend+Backend | Supabase project URL
+VITE_SUPABASE_ANON_KEY          | Frontend+Backend | Supabase anon key
+VITE_SUPABASE_PUBLISHABLE_KEY   | Frontend         | Supabase anon key (alias)
+VITE_MAPBOX_TOKEN               | Frontend         | Mapbox access token
+VITE_API_BASE_URL               | Frontend         | Backend API URL
+VITE_BACKEND_URL                | Frontend         | Backend URL (alternative)
+VITE_GEE_BACKEND_URL            | Frontend         | GEE backend URL
+GEE_PROJECT_ID                  | Backend          | Google Earth Engine project
+GEE_PRIVATE_KEY_PATH            | Backend          | GEE service account key
+SUPABASE_URL                    | Backend          | Supabase URL (server-side)
+SUPABASE_KEY                    | Backend          | Supabase service key
+FRONTEND_URL                    | Backend          | CORS allowed origin
+PORT                            | Backend          | Server port (Railway)
+
+================================================================================
+7. DATABASE SCHEMA
+================================================================================
+
+-- hotspots: Core UHI hotspot data with satellite indices
+CREATE TABLE hotspots (
+    id UUID PRIMARY KEY,
+    city VARCHAR(100),
+    name VARCHAR(200),
+    district_name VARCHAR(200),    -- [INFERRED from code]
+    state_name VARCHAR(200),       -- [INFERRED from code]
+    latitude DECIMAL(10,8),
+    longitude DECIMAL(11,8),
+    avg_temperature DECIMAL(5,2),
+    intensity VARCHAR(20),          -- extreme|hot|warm|mild|cool
+    avg_ndvi DECIMAL(5,3),          -- Added in migration 20250116
+    avg_ndbi DECIMAL(5,3),          -- Added in migration 20250116
+    elevation DECIMAL(8,2),         -- [INFERRED from code]
+    population DECIMAL(15,2),       -- [INFERRED from code]
+    last_updated TIMESTAMP
+);
+
+-- predictions: ML-generated temperature forecasts
+CREATE TABLE predictions (
+    id UUID PRIMARY KEY,
+    city VARCHAR(100),
+    year INTEGER,
+    predicted_temp DECIMAL(5,2),
+    confidence_level DECIMAL(3,2),
+    created_at TIMESTAMP,
+    UNIQUE(city, year)
+);
+
+-- temperature_readings: Historical weather data
+CREATE TABLE temperature_readings (
+    id UUID PRIMARY KEY,
+    city VARCHAR(100),
+    location_name VARCHAR(200),
+    latitude DECIMAL(10,8),
+    longitude DECIMAL(11,8),
+    temperature DECIMAL(5,2),
+    feels_like DECIMAL(5,2),
+    humidity INTEGER,
+    recorded_at TIMESTAMP,
+    source VARCHAR(50)
+);
+
+-- district_aggregates: Pre-computed aggregations [INFERRED from code]
+CREATE TABLE district_aggregates (
+    district_name VARCHAR(200),
+    state_name VARCHAR(200),
+    avg_temperature DECIMAL(5,2),
+    min_temperature DECIMAL(5,2),
+    max_temperature DECIMAL(5,2),
+    avg_ndvi DECIMAL(5,3),
+    avg_ndbi DECIMAL(5,3),
+    data_points INTEGER,
+    total_population DECIMAL(15,2)
+);
+
+================================================================================
+8. ML MODEL DETAILS
+================================================================================
+
+------------------------------------------------------------------------------
+SPATIAL MODEL (Primary)
+------------------------------------------------------------------------------
+
+Type:              RandomForestRegressor (scikit-learn)
+File:              backend/models/uhi_rf_model_tuned.pkl
+Features:          [NDVI, NDBI, Elevation, Population]
+Target:            Land Surface Temperature (C)
+Training Samples:  62,134
+Test Samples:      15,534
+Metrics:           R2=0.9415, RMSE=1.38C
+Hyperparameters:   n_estimators=100, max_depth=30, min_samples_split=5,
+                   max_features='sqrt', bootstrap=False
+
+------------------------------------------------------------------------------
+FEATURE IMPORTANCE
+------------------------------------------------------------------------------
+
+Feature                | Importance
+-----------------------|------------
+NDBI (Urban Density)   | 38.21%
+NDVI (Vegetation)      | 24.96%
+Population             | 22.57%
+Elevation              | 14.26%
+
+------------------------------------------------------------------------------
+TIME-SERIES MODEL
+------------------------------------------------------------------------------
+
+Type:     CatBoost [INFERRED from imports]
+File:     backend/models/timeseries_temperature_model.pkl
+Features: [avg_ndvi, avg_ndbi, elevation, population, latitude, longitude,
+           years_from_baseline, climate_offset]
+Purpose:  Future temperature projections with population growth & urbanization trends
+
+================================================================================
+9. DATA PIPELINE ARTIFACTS
+================================================================================
+
+------------------------------------------------------------------------------
+TRAINING DATA FILES (in backend/data/)
+------------------------------------------------------------------------------
+
+File                                    | Description
+----------------------------------------|--------------------------------------------
+all_districts_2016_2024.csv/.parquet    | Complete district-level dataset
+Malaysia_All_Cities_LST_2016_2024.csv   | City-level LST time series
+Malaysia_UHI_2025_Only.csv              | 2025 validation dataset
+UHI_Training_Data_Malaysia_Combined.csv | Combined training data
+UHI_Dataset_Cleaned_Final.csv           | Cleaned final dataset
+timeseries_predictions_2026_2035.csv    | Pre-generated forecasts
+
+------------------------------------------------------------------------------
+GEOJSON DATA FILES
+------------------------------------------------------------------------------
+
+File                              | Description
+----------------------------------|--------------------------------------------
+malaysia_states.geojson           | State boundaries
+malaysia_districts_filtered.geojson| District boundaries (filtered)
+malaysia.district.geojson         | Full district boundaries
+
+------------------------------------------------------------------------------
+DATA SOURCES [INFERRED]
+------------------------------------------------------------------------------
+
+- Landsat 8/9 Collection 2 (via GEE): LST, NDVI, NDBI
+- Google Earth Engine: Satellite imagery processing
+- Manual extraction scripts: Evidence of deleted extraction scripts in git status
+
+================================================================================
+10. KNOWN ISSUES / SMELLS
+================================================================================
+
+------------------------------------------------------------------------------
+CODE QUALITY ISSUES
+------------------------------------------------------------------------------
+
+1. DUPLICATE PYDANTIC MODEL DEFINITION
+   Location: backend/prediction_api.py:749
+   Issue: `ScenarioRequest` is defined twice with different schemas
+
+2. HARDCODED DATA in multiple places:
+   - WP territories data: backend/prediction_api.py:834-838
+   - Trend data: src/pages/ScenarioPage.tsx:111-122
+   - Feature importance: src/pages/ScenarioPage.tsx:103-108
+
+3. PORT CONFUSION
+   Multiple ports referenced: 8000, 8080-8090 in CORS, 3001 for GEE
+
+4. EMPTY TRY/EXCEPT BLOCKS
+   Location: backend/prediction_api.py:246 (pass statement)
+
+------------------------------------------------------------------------------
+SECURITY CONCERNS
+------------------------------------------------------------------------------
+
+1. NO AUTHENTICATION on any API endpoint - all routes are public
+2. GEE SERVICE ACCOUNT KEY stored as file path in env var
+3. SUPABASE KEYS mixed between ANON and service keys in code
+4. CORS ALLOWS WILDCARD Vercel domains at backend/main.py:55
+
+------------------------------------------------------------------------------
+ARCHITECTURAL ISSUES
+------------------------------------------------------------------------------
+
+1. MIXED DATA FETCHING PATTERNS:
+   - Some hooks query Supabase directly
+   - Some hooks call backend API
+   - No consistent data layer abstraction
+
+2. DUPLICATE SUPABASE CLIENT INITIALIZATION:
+   - Frontend: src/integrations/supabase/client.ts
+   - Backend: Multiple get_supabase() functions with lazy loading
+
+3. MODEL PATH INCONSISTENCY
+   Comments reference XGBoost but code loads Random Forest
+
+4. DEAD CODE
+   Git status shows many deleted Python scripts (likely data pipeline/training scripts)
+
+------------------------------------------------------------------------------
+DATA ISSUES
+------------------------------------------------------------------------------
+
+1. TYPESCRIPT TYPES DON'T MATCH ACTUAL DB SCHEMA
+   File: src/integrations/supabase/types.ts
+   Missing: district_name, state_name, elevation, population columns
+
+2. FUZZY NAME MATCHING for district names indicates data normalization issues
+
+================================================================================
+11. OPEN QUESTIONS
+================================================================================
+
+1. WHERE IS THE MODEL TRAINING CODE?
+   Git status shows many training scripts were deleted. Is this intentional
+   or should they be restored?
+
+2. WHAT IS THE UPDATE CADENCE FOR SUPABASE DATA?
+   No background jobs or cron found. Is data manually uploaded?
+
+3. IS THE GEE INTEGRATION ACTIVELY USED?
+   The /api/gee/* endpoints exist but unclear if frontend calls them
+   (frontend primarily uses Supabase).
+
+4. WHAT HAPPENED TO THE XGBOOST MODEL?
+   xgboost_best_spatial_model.pkl exists but code uses Random Forest.
+   Is XGBoost deprecated?
+
+5. IS THERE A STAGING ENVIRONMENT?
+   Only production Vercel URL referenced. Railway deployment unclear.
+
+6. WHAT IS THE DATA REFRESH PROCESS?
+   district_aggregates table mentioned but no populate script visible.
+
+7. ARE LEAFLET AND MAPBOX BOTH NEEDED?
+   Both dependencies exist, but only Mapbox appears actively used.
+
+8. WHAT IS THE uhifyp-13f8cdbd0d07.json FILE?
+   Appears to be a GEE service account key - should this be in git?
+
+================================================================================
+SUMMARY
+================================================================================
+
+This is a full-stack Urban Heat Island (UHI) analysis application for Malaysia:
+
+- FRONTEND: React/Vite SPA with interactive Mapbox visualizations
+- BACKEND: FastAPI serving ML predictions and GeoJSON data
+- ML: Random Forest regressor (R2=0.94) predicting temperature from
+      NDVI, NDBI, elevation, and population
+- DATA: Supabase PostgreSQL with ~42K+ hotspot records, satellite indices
+        from Google Earth Engine
+
+KEY ARCHITECTURAL DECISIONS:
+1. Hybrid data fetching: Frontend queries Supabase directly for basic data,
+   backend for ML predictions
+2. Pre-computed aggregations: district_aggregates table for fast choropleth
+   rendering
+3. Monorepo structure: Frontend and backend in same repository
+4. Railway deployment: Backend only; frontend likely on Vercel
+
+CRITICAL FINDINGS:
+- No authentication layer - all endpoints are public
+- TypeScript types out of sync with actual database schema
+- Training pipeline removed - only model artifacts remain
+- Duplicate code patterns in Supabase client initialization and Pydantic models
+
+================================================================================
+END OF REPORT
+================================================================================

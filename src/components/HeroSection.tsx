@@ -19,7 +19,7 @@ const HeroSection = () => {
       </div>
 
       {/* Floating Data Points */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block">
         <div className="absolute top-1/4 right-1/4 animate-float" style={{ animationDelay: '0s' }}>
           <div className="bg-card/20 backdrop-blur-md rounded-xl p-3 border border-primary-foreground/20">
             <div className="flex items-center gap-2 text-primary-foreground">
@@ -64,11 +64,12 @@ const HeroSection = () => {
             Leveraging satellite imagery and machine learning to map, predict, and simulate Urban Heat Island effects across Malaysian cities. A decision-support platform for sustainable urban planning.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+          <div className="flex flex-col sm:flex-row gap-4 mb-4 animate-fade-up" style={{ animationDelay: '0.3s' }}>
             <Button
               variant="hero"
               size="xl"
               onClick={() => navigate('/choropleth')}
+              className="w-full sm:w-auto"
             >
               View Choropleth Map
             </Button>
@@ -76,14 +77,15 @@ const HeroSection = () => {
               variant="heroOutline"
               size="xl"
               onClick={() => navigate('/scenarios')}
+              className="w-full sm:w-auto"
             >
               View Future Scenarios
             </Button>
           </div>
 
-          {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-primary-foreground/20 animate-fade-up" style={{ animationDelay: '0.4s' }}>
-            <div>
+          {/* Stats Row — Static values from published UHI research & project specs (not live data) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 mt-12 pt-8 border-t border-primary-foreground/20 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+            <div className="col-span-2 sm:col-span-1">
               <div className="text-3xl md:text-4xl font-display font-bold text-primary-foreground">+4-9°C</div>
               <div className="text-sm text-primary-foreground/70 mt-1">Urban-Rural Difference</div>
             </div>

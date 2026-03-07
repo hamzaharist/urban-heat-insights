@@ -1,5 +1,5 @@
 import { MapPin, Layers, Info, Loader2 } from "lucide-react";
-import { useHotspots, useAllHotspots } from "@/hooks/useHotspots";
+import { useAllHotspots } from "@/hooks/useHotspots";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Suspense, lazy } from 'react';
 import CitySelector from './CitySelector';
@@ -17,11 +17,11 @@ const MapSection = ({ selectedCity, onCityChange }: MapSectionProps) => {
   // Fetch ALL hotspots for map display (no filtering)
   const { data: allHotspots, isLoading: isLoadingAll, error: errorAll } = useAllHotspots();
 
-  // Fetch city-filtered hotspots for statistics only
-  const { data: cityHotspots } = useHotspots(selectedCity);
+  // Filter client-side for city stats (avoids duplicate Supabase query)
+  const cityHotspots = allHotspots?.filter(h => h.city === selectedCity) || [];
 
   // Calculate stats from city-filtered data
-  const stats = cityHotspots ? {
+  const stats = cityHotspots.length > 0 ? {
     peakTemp: Math.max(...cityHotspots.map(h => h.temperature)),
     criticalHotspots: cityHotspots.filter(h => h.intensity === 'extreme' || h.intensity === 'hot').length,
     avgNDVI: cityHotspots.reduce((sum, h) => sum + (h.avg_ndvi || 0), 0) / cityHotspots.length,
@@ -29,7 +29,7 @@ const MapSection = ({ selectedCity, onCityChange }: MapSectionProps) => {
   } : null;
 
   return (
-    <section id="map-section" className="py-20 bg-background">
+    <section id="map-section" className="section-spacing bg-background">
       <div className="container">
         <div className="max-w-3xl mx-auto text-center mb-12">
           <span className="inline-block text-sm font-semibold text-accent uppercase tracking-wider mb-4">
@@ -112,48 +112,48 @@ const MapSection = ({ selectedCity, onCityChange }: MapSectionProps) => {
 
         {/* Statistics Grid */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-            <div className="bg-card rounded-xl p-6 border border-border">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-heat-extreme/10 flex items-center justify-center">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+            <div className="bg-card rounded-xl p-4 sm:p-6 border border-border">
+              <div className="flex items-start gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-heat-extreme/10 flex items-center justify-center flex-shrink-0">
                   <Info className="w-5 h-5 text-heat-extreme" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stats.peakTemp.toFixed(1)}°C</p>
-                  <p className="text-sm text-muted-foreground">Peak Temperature</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold text-foreground truncate">{stats.peakTemp.toFixed(1)}°C</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Peak Temperature</p>
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-xl p-6 border border-border">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+            <div className="bg-card rounded-xl p-4 sm:p-6 border border-border">
+              <div className="flex items-start gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
                   <MapPin className="w-5 h-5 text-accent" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stats.criticalHotspots}</p>
-                  <p className="text-sm text-muted-foreground">Critical Hotspots</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold text-foreground truncate">{stats.criticalHotspots}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Critical Hotspots</p>
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-xl p-6 border border-border">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+            <div className="bg-card rounded-xl p-4 sm:p-6 border border-border">
+              <div className="flex items-start gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
                   <Layers className="w-5 h-5 text-green-500" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stats.avgNDVI.toFixed(2)}</p>
-                  <p className="text-sm text-muted-foreground">Avg NDVI</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold text-foreground truncate">{stats.avgNDVI.toFixed(2)}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Avg NDVI</p>
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-xl p-6 border border-border">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+            <div className="bg-card rounded-xl p-4 sm:p-6 border border-border">
+              <div className="flex items-start gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
                   <Info className="w-5 h-5 text-orange-500" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stats.builtUpIndex.toFixed(2)}</p>
-                  <p className="text-sm text-muted-foreground">Built-up Index</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold text-foreground truncate">{stats.builtUpIndex.toFixed(2)}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Built-up Index</p>
                 </div>
               </div>
             </div>

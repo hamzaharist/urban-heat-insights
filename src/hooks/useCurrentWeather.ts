@@ -21,6 +21,13 @@ const CITY_COORDS: Record<string, CityCoordinates> = {
 };
 
 /**
+ * Check if a city has dedicated weather coordinates
+ */
+export function isCitySupported(city: string): boolean {
+     return city in CITY_COORDS;
+}
+
+/**
  * Hook to fetch current weather data from Open-Meteo API
  */
 export function useCurrentWeather(city: string = 'Kuala Lumpur') {

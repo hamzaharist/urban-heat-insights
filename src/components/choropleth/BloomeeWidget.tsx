@@ -1,4 +1,4 @@
- import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Leaf, Building2, Flame, TrendingUp, AlertTriangle, CheckCircle2, MapPin } from 'lucide-react';
 
 interface BloomeeWidgetProps {
@@ -172,11 +172,10 @@ export function BloomeeWidget({ data, isLoading }: BloomeeWidgetProps) {
             {data.isScenario && data.tempChange !== undefined && data.tempChange !== 0 && (
               <div className="mt-4 pt-4 border-t border-white/10">
                 <div className="flex items-center justify-center gap-2">
-                  <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full ${
-                    data.tempChange < 0
-                      ? 'bg-green-500/20 text-green-300'
-                      : 'bg-red-500/20 text-red-300'
-                  }`}>
+                  <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full ${data.tempChange < 0
+                    ? 'bg-green-500/20 text-green-300'
+                    : 'bg-red-500/20 text-red-300'
+                    }`}>
                     <TrendingUp className={`w-4 h-4 ${data.tempChange < 0 ? 'rotate-180' : ''}`} />
                     <span className="text-sm font-bold">
                       {data.tempChange > 0 ? '+' : ''}{data.tempChange.toFixed(2)}°C
@@ -201,8 +200,8 @@ export function BloomeeWidget({ data, isLoading }: BloomeeWidgetProps) {
                   <Leaf className="w-4 h-4 text-green-400" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-white">Vegetation Index</div>
-                  <div className="text-xs text-white/60">NDVI Coverage</div>
+                  <div className="text-sm font-semibold text-white">Greenness Score</div>
+                  <div className="text-xs text-white/60">NDVI Index</div>
                 </div>
               </div>
               <span className="text-lg font-bold text-green-400">
@@ -225,18 +224,18 @@ export function BloomeeWidget({ data, isLoading }: BloomeeWidgetProps) {
                   <Building2 className="w-4 h-4 text-blue-400" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-white">Urban Density</div>
+                  <div className="text-sm font-semibold text-white">Built-up Score</div>
                   <div className="text-xs text-white/60">NDBI Index</div>
                 </div>
               </div>
               <span className="text-lg font-bold text-blue-400">
-                {(data.ndbi * 100).toFixed(0)}%
+                {((data.ndbi + 1) / 2 * 100).toFixed(0)}%
               </span>
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${getPercentage(data.ndbi)}%` }}
+                style={{ width: `${(data.ndbi + 1) / 2 * 100}%` }}
               />
             </div>
           </div>

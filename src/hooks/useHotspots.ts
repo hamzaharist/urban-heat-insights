@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { HotspotData } from '@/types/weather';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 /**
  * Hook to fetch hotspots with toggle between ACTUAL data and AI PREDICTIONS
@@ -97,34 +97,3 @@ export function useHotspots(city: string = 'Kuala Lumpur') {
      });
 }
 
-/**
- * Hook to fetch and subscribe to real-time hotspot updates
- */
-export function useHotspotsRealtime(city: string = 'Kuala Lumpur') {
-     const query = useHotspots(city);
-
-     // Set up real-time subscription
-     // useEffect(() => {
-     //   const channel = supabase
-     //     .channel('hotspots-changes')
-     //     .on(
-     //       'postgres_changes',
-     //       {
-     //         event: '*',
-     //         schema: 'public',
-     //         table: 'hotspots',
-     //         filter: `city=eq.${city}`,
-     //       },
-     //       () => {
-     //         query.refetch();
-     //       }
-     //     )
-     //     .subscribe();
-
-     //   return () => {
-     //     supabase.removeChannel(channel);
-     //   };
-     // }, [city, query]);
-
-     return query;
-}

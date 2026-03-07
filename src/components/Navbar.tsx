@@ -1,22 +1,22 @@
 import { useState } from "react";
-import { MapPin, Menu, X } from "lucide-react";
+import { MapPin, Menu, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { label: "Problem", href: "#problem" },
-    { label: "Technology", href: "#technology" },
-    { label: "Heat Map", href: "#map" },
-    { label: "Choropleth", href: "/choropleth" },
-    { label: "Scenarios", href: "/scenarios" },
-    { label: "About", href: "#about" },
+    { label: "Problem", href: "#problem", isPage: false },
+    { label: "Technology", href: "#technology", isPage: false },
+    { label: "Heat Map", href: "#map", isPage: false },
+    { label: "Choropleth", href: "/choropleth", isPage: true },
+    { label: "Scenarios", href: "/scenarios", isPage: true },
+    { label: "About", href: "#about", isPage: false },
   ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-      <div className="container">
+      <div className="w-full px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2">
@@ -32,9 +32,13 @@ const Navbar = () => {
               <a
                 key={link.label}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className={`text-sm font-medium transition-colors flex items-center gap-1 ${link.isPage
+                    ? 'text-foreground hover:text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 {link.label}
+                {link.isPage && <ExternalLink className="w-3 h-3 opacity-50" />}
               </a>
             ))}
           </div>
@@ -67,10 +71,14 @@ const Navbar = () => {
                 <a
                   key={link.label}
                   href={link.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                  className={`text-sm font-medium transition-colors px-2 py-1 flex items-center gap-1.5 ${link.isPage
+                      ? 'text-foreground hover:text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                    }`}
                   onClick={() => setIsOpen(false)}
                 >
                   {link.label}
+                  {link.isPage && <ExternalLink className="w-3 h-3 opacity-50" />}
                 </a>
               ))}
               <Button variant="default" size="sm" className="mt-2" asChild>

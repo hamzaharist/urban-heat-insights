@@ -54,7 +54,7 @@ const TechnologySection = () => {
   };
 
   return (
-    <section className="py-20 bg-muted/50">
+    <section className="section-spacing bg-muted/50">
       <div className="container">
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-16">

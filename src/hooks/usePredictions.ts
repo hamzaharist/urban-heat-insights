@@ -13,7 +13,7 @@ export function usePredictions(city: string = 'Kuala Lumpur', yearRange?: [numbe
                let query = supabase
                     .from('predictions')
                     .select('*')
-                    .like('city', `${city}%`)  // Changed from .eq to .like to match "Kuala Lumpur - District"
+                    .like('city', `${city}%`)  // Uses LIKE because DB stores "Kuala Lumpur - District"
                     .order('year', { ascending: true });
 
                // Filter by year range if provided

@@ -2,7 +2,7 @@ import { Thermometer, Heart, Zap, Leaf } from "lucide-react";
 
 const ProblemSection = () => {
   return (
-    <section className="py-20 bg-background">
+    <section className="section-spacing bg-background">
       <div className="container">
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-16">

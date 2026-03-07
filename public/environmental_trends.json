@@ -5,6 +5,10 @@
     "climateBaseline": 25
   },
   "riskProbability": 81,
+  "modelPerformance": {
+    "r2Score": 0.621,
+    "confidence": 94
+  },
   "explanation": {
     "note": "These percentages represent typical contributions to Urban Heat Island (UHI) effect based on scientific literature and model predictions.",
     "urbanExpansion": "NDBI-based built-up area expansion contributes ~45% to UHI",

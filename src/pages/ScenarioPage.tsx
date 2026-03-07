@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
-  MapPin,
   Thermometer,
   Leaf,
   Building2,
@@ -12,9 +11,13 @@ import {
   Target,
   Minus,
   ChevronRight,
+  Sparkles,
+  Zap,
+  AlertTriangle,
+  CheckCircle2,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
-import { ChoroplethMap } from "@/components/choropleth/ChoroplethMap";
 import { ScenarioNavbar } from "@/components/ScenarioNavbar";
 import { useDistrictHeatmap } from "@/hooks/useDistrictHeatmap";
 import { useStateHeatmap } from "@/hooks/useStateHeatmap";
@@ -92,10 +95,10 @@ const ProjectionTooltip = ({ active, payload, label }: any) => {
 
 // --- Scenario Templates ---
 const scenarioTemplates = [
-  { name: "Green City", description: "Maximize green spaces", ndvi: 0.3, ndbi: -0.2, icon: Leaf, color: "text-eco" },
-  { name: "High Urban", description: "Dense development", ndvi: -0.2, ndbi: 0.3, icon: Building2, color: "text-orange-500" },
-  { name: "Eco District", description: "Moderate greening", ndvi: 0.15, ndbi: -0.1, icon: Leaf, color: "text-emerald-500" },
-  { name: "Expansion", description: "Urban growth", ndvi: -0.15, ndbi: 0.2, icon: Building2, color: "text-red-500" },
+  { name: "Green City", description: "Maximize green spaces (+30% vegetation)", ndvi: 0.3, ndbi: -0.2, icon: Leaf, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+  { name: "Eco District", description: "Balanced sustainable approach", ndvi: 0.15, ndbi: -0.1, icon: Sparkles, color: "text-teal-500", bg: "bg-teal-500/10", border: "border-teal-500/20" },
+  { name: "High Urban", description: "Dense commercial development", ndvi: -0.2, ndbi: 0.3, icon: Building2, color: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/20" },
+  { name: "Expansion", description: "Rapid urban growth scenario", ndvi: -0.15, ndbi: 0.2, icon: TrendingUp, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
 ];
 
 // Feature importance (from the trained RF model)
@@ -160,7 +163,7 @@ const ScenarioPage = () => {
   const currentGeoJSON = viewLevel === "states" ? stateGeoJSON : districtGeoJSON;
   const isLoadingData = viewLevel === "states" ? isLoadingStates : isLoadingDistricts;
 
-  const kpiData: KPIData | null = (() => {
+  const kpiData: KPIData | null = useMemo(() => {
     if (!currentGeoJSON?.features?.length) return null;
     const valid = currentGeoJSON.features
       .filter((f: any) => f.properties.avg_temperature != null && !isNaN(f.properties.avg_temperature))
@@ -169,19 +172,18 @@ const ScenarioPage = () => {
     const avg = valid.reduce((s: number, d: any) => s + d.temp, 0) / valid.length;
     const sorted = [...valid].sort((a: any, b: any) => b.temp - a.temp);
     return { nationalAvg: avg, hottestDistrict: sorted[0], coolestDistrict: sorted[sorted.length - 1] };
-  })();
+  }, [currentGeoJSON]);
 
-  const hottestLocations = (() => {
+  const hottestLocations = useMemo(() => {
     if (!currentGeoJSON?.features) return [];
     return currentGeoJSON.features
       .filter((f: any) => f.properties.avg_temperature != null && !isNaN(f.properties.avg_temperature))
       .map((f: any) => ({ name: f.properties.name || "Unknown", temperature: f.properties.avg_temperature! }))
       .sort((a: any, b: any) => b.temperature - a.temperature)
       .slice(0, 10);
-  })();
+  }, [currentGeoJSON]);
 
   // --- Effects ---
-  // Reset selection when switching between states and districts
   useEffect(() => {
     setSelectedLocation("");
     setDistrictData(null);
@@ -191,7 +193,6 @@ const ScenarioPage = () => {
     setTimeSeriesResult(null);
   }, [viewLevel]);
 
-  // Auto-select first location when data loads
   useEffect(() => {
     if (currentGeoJSON?.features?.length && !selectedLocation) {
       const first = currentGeoJSON.features[0]?.properties?.name;
@@ -268,7 +269,7 @@ const ScenarioPage = () => {
         toast.error(`Spatial prediction failed for "${selectedLocation}"`);
       }
 
-      // 2. Time-series projection (CatBoost) - fire in parallel
+      // 2. Time-series projection (CatBoost)
       try {
         const tsRes = await fetch(`${API_BASE}/api/timeseries/api/predict-scenario`, {
           method: "POST",
@@ -285,7 +286,7 @@ const ScenarioPage = () => {
           setTimeSeriesResult(await tsRes.json());
         }
       } catch {
-        // Time-series is optional — don't block on failure
+        // Time-series is optional
       }
 
       toast.success(`Prediction complete for ${selectedLocation}`);
@@ -312,6 +313,29 @@ const ScenarioPage = () => {
   const hasAdjustment = ndviAdjustment[0] !== 0 || ndbiAdjustment[0] !== 0;
   const trendIcon = tempChange < 0 ? TrendingDown : tempChange > 0 ? TrendingUp : Minus;
   const TrendIcon = trendIcon;
+
+  // Projection data for hero chart
+  const projectionData = useMemo(() => {
+    if (timeSeriesResult) {
+      const offset = tempChange || 0;
+      return timeSeriesResult.predictions.map(p => ({
+        ...p,
+        temperature: Math.round((p.temperature + offset) * 100) / 100
+      }));
+    }
+    return null;
+  }, [timeSeriesResult, tempChange]);
+
+  const projectionStats = useMemo(() => {
+    if (!projectionData || !baselineTemp) return null;
+    const temps = projectionData.map(p => p.temperature);
+    const minTemp = Math.min(...temps);
+    const maxTemp = Math.max(...temps);
+    const avgTemp = temps.reduce((sum, t) => sum + t, 0) / temps.length;
+    const changeFromBaseline = avgTemp - baselineTemp;
+    const effectiveTrend = tempChange < -0.1 ? "cooling" : tempChange > 0.1 ? "warming" : "stable";
+    return { minTemp, maxTemp, avgTemp, changeFromBaseline, effectiveTrend };
+  }, [projectionData, baselineTemp, tempChange]);
 
   // ============================
   // RENDER
@@ -345,13 +369,167 @@ const ScenarioPage = () => {
         trendData={trendData}
       />
 
-      <div className="max-w-[1800px] mx-auto p-6">
+      <div className="max-w-[1600px] mx-auto p-6">
+        {/* ═══════════════════════════════
+            HERO: 10-YEAR PROJECTION CHART
+            ═══════════════════════════════ */}
+        <div className="mb-6">
+          {projectionData && projectionStats ? (
+            <div className="bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 rounded-3xl shadow-xl border border-primary/10 overflow-hidden">
+              {/* Hero Header */}
+              <div className="p-6 border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      {projectionStats.effectiveTrend === "cooling" ? (
+                        <div className="p-2 bg-emerald-500/10 rounded-xl">
+                          <TrendingDown className="w-6 h-6 text-emerald-500" />
+                        </div>
+                      ) : (
+                        <div className="p-2 bg-accent/10 rounded-xl">
+                          <TrendingUp className="w-6 h-6 text-accent" />
+                        </div>
+                      )}
+                      <div>
+                        <h1 className="font-display text-xl font-bold text-foreground">
+                          10-Year Temperature Projection
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedLocation} · Based on your scenario adjustments
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Key Metrics */}
+                  <div className="flex items-center gap-4">
+                    <div className="text-center px-4 py-2 bg-card rounded-xl border border-border">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Peak</p>
+                      <p className="text-lg font-bold text-foreground">{projectionStats.maxTemp.toFixed(1)}°C</p>
+                    </div>
+                    <div className="text-center px-4 py-2 bg-card rounded-xl border border-border">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Average</p>
+                      <p className="text-lg font-bold text-foreground">{projectionStats.avgTemp.toFixed(1)}°C</p>
+                    </div>
+                    <div className={`text-center px-4 py-2 rounded-xl border ${
+                      projectionStats.changeFromBaseline < 0
+                        ? "bg-emerald-500/10 border-emerald-500/20"
+                        : "bg-red-500/10 border-red-500/20"
+                    }`}>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">vs Baseline</p>
+                      <p className={`text-lg font-bold ${
+                        projectionStats.changeFromBaseline < 0 ? "text-emerald-500" : "text-red-500"
+                      }`}>
+                        {projectionStats.changeFromBaseline > 0 ? "+" : ""}{projectionStats.changeFromBaseline.toFixed(1)}°C
+                      </p>
+                    </div>
+                    <div className={`px-4 py-2 rounded-xl text-sm font-semibold ${
+                      projectionStats.effectiveTrend === "cooling"
+                        ? "bg-emerald-500/10 text-emerald-500"
+                        : projectionStats.effectiveTrend === "warming"
+                          ? "bg-red-500/10 text-red-500"
+                          : "bg-muted text-muted-foreground"
+                    }`}>
+                      {projectionStats.effectiveTrend === "cooling" ? "↓ Cooling" :
+                       projectionStats.effectiveTrend === "warming" ? "↑ Warming" : "→ Stable"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hero Chart */}
+              <div className="p-6">
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={projectionData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+                      <defs>
+                        <linearGradient id="projectionGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={projectionStats.effectiveTrend === "cooling" ? "#22c55e" : "#f97316"} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={projectionStats.effectiveTrend === "cooling" ? "#22c55e" : "#f97316"} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                      <XAxis
+                        dataKey="year"
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v: number) => `${v.toFixed(1)}°`}
+                        domain={[Math.floor(projectionStats.minTemp - 1), Math.ceil(projectionStats.maxTemp + 1)]}
+                        width={50}
+                      />
+                      <Tooltip content={<ProjectionTooltip />} />
+                      <ReferenceLine
+                        y={baselineTemp}
+                        stroke="hsl(var(--muted-foreground))"
+                        strokeDasharray="5 5"
+                        opacity={0.6}
+                        label={{ value: `Current: ${baselineTemp?.toFixed(1)}°C`, fill: "hsl(var(--muted-foreground))", fontSize: 11, position: "insideTopRight" }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="temperature"
+                        stroke="transparent"
+                        fill="url(#projectionGradient)"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="temperature"
+                        stroke={projectionStats.effectiveTrend === "cooling" ? "#22c55e" : "#f97316"}
+                        strokeWidth={3}
+                        dot={{ r: 5, fill: projectionStats.effectiveTrend === "cooling" ? "#22c55e" : "#f97316", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+                        activeDot={{ r: 8 }}
+                        animationDuration={1000}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Confidence Note */}
+                {timeSeriesResult && (
+                  <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Info className="w-3.5 h-3.5" />
+                    <span>Model confidence: {Math.round(timeSeriesResult.metrics.confidence * 100)}%</span>
+                    <span className="mx-2">•</span>
+                    <span>Spatial adjustment applied: {tempChange > 0 ? "+" : ""}{tempChange.toFixed(2)}°C</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Placeholder when no projection yet */
+            <div className="bg-gradient-to-br from-muted/30 to-muted/10 rounded-3xl border border-dashed border-border p-12">
+              <div className="text-center max-w-md mx-auto">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <BarChart3 className="w-8 h-8 text-primary" />
+                </div>
+                <h2 className="font-display text-lg font-semibold text-foreground mb-2">
+                  Temperature Projection
+                </h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Adjust the vegetation and urban density sliders below, then click "Predict Temperature" to see a 10-year forecast for {selectedLocation || "your selected location"}.
+                </p>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <span>Powered by CatBoost + XGBoost ML models</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ═══════════════════════════════
+            MAIN GRID: Controls + Results + Analytics
+            ═══════════════════════════════ */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* ═══════════════════════════════
-              SIDEBAR (3 cols)
-              ═══════════════════════════════ */}
-          <div className="lg:col-span-3 space-y-5">
+          {/* LEFT COLUMN: Controls & Prediction */}
+          <div className="lg:col-span-4 space-y-5">
 
             {/* --- What-If Controls --- */}
             <div className="bg-card rounded-2xl shadow-card p-5 border border-border">
@@ -370,10 +548,10 @@ const ScenarioPage = () => {
                     <button
                       key={i}
                       onClick={() => applyPreset(t)}
-                      className="px-3 py-2 text-left rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-all text-xs group"
+                      className={`px-3 py-2.5 text-left rounded-xl border ${t.border} ${t.bg} hover:opacity-90 transition-all text-xs group`}
                     >
-                      <div className="flex items-center gap-1.5 font-semibold text-foreground group-hover:text-primary">
-                        <t.icon className={`w-3.5 h-3.5 ${t.color}`} />
+                      <div className={`flex items-center gap-1.5 font-semibold ${t.color}`}>
+                        <t.icon className="w-3.5 h-3.5" />
                         {t.name}
                       </div>
                       <div className="text-[10px] text-muted-foreground mt-0.5">{t.description}</div>
@@ -386,10 +564,10 @@ const ScenarioPage = () => {
               <div className="mb-5">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <Leaf className="w-4 h-4 text-eco" />
+                    <Leaf className="w-4 h-4 text-emerald-500" />
                     <span className="text-sm font-medium text-foreground">Greenery (NDVI)</span>
                   </div>
-                  <span className={`text-sm font-bold tabular-nums ${ndviAdjustment[0] >= 0 ? "text-eco" : "text-orange-500"}`}>
+                  <span className={`text-sm font-bold tabular-nums ${ndviAdjustment[0] >= 0 ? "text-emerald-500" : "text-orange-500"}`}>
                     {ndviAdjustment[0] > 0 ? "+" : ""}{ndviAdjustment[0].toFixed(2)}
                   </span>
                 </div>
@@ -399,7 +577,7 @@ const ScenarioPage = () => {
                   min={-0.5}
                   max={0.5}
                   step={0.01}
-                  className="[&_[role=slider]]:bg-eco [&_[role=slider]]:border-eco [&_.bg-primary]:bg-eco"
+                  className="[&_[role=slider]]:bg-emerald-500 [&_[role=slider]]:border-emerald-500 [&_.bg-primary]:bg-emerald-500"
                 />
                 <div className="flex justify-between text-[10px] text-muted-foreground mt-1.5">
                   <span>Less Green</span>
@@ -440,7 +618,7 @@ const ScenarioPage = () => {
                 size="lg"
               >
                 {isSimulating ? (
-                  <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Running…</>
+                  <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Running ML Models…</>
                 ) : !hasAdjustment ? (
                   "Adjust sliders first"
                 ) : (
@@ -466,7 +644,7 @@ const ScenarioPage = () => {
               ) : (
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs text-primary-foreground/70">Baseline</p>
+                    <p className="text-xs text-primary-foreground/70">Baseline Temperature</p>
                     <p className="text-3xl font-display font-bold">{baselineTemp?.toFixed(1) || "--"}°C</p>
                   </div>
 
@@ -474,16 +652,27 @@ const ScenarioPage = () => {
                     <>
                       <div className="h-px bg-primary-foreground/20" />
                       <div>
-                        <p className="text-xs text-primary-foreground/70">Predicted</p>
+                        <p className="text-xs text-primary-foreground/70">Predicted Temperature</p>
                         <p className="text-3xl font-display font-bold">{predictedTemp.toFixed(1)}°C</p>
                       </div>
                       <div className={`flex items-center gap-2 text-lg font-bold ${tempChange < 0 ? "text-emerald-300" : "text-red-300"}`}>
                         <TrendIcon className="w-5 h-5" />
                         <span>{tempChange > 0 ? "+" : ""}{tempChange.toFixed(2)}°C</span>
                       </div>
-                      <p className="text-xs text-primary-foreground/80">
-                        {tempChange < 0 ? "🎉 Your changes help reduce heat!" : "⚠️ Consider more green spaces."}
-                      </p>
+                      <div className={`flex items-center gap-2 p-3 rounded-xl ${
+                        tempChange < 0 ? "bg-emerald-500/20" : "bg-red-500/20"
+                      }`}>
+                        {tempChange < 0 ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                        ) : (
+                          <AlertTriangle className="w-4 h-4 text-red-300" />
+                        )}
+                        <p className="text-xs text-primary-foreground/90">
+                          {tempChange < 0
+                            ? "Your changes help reduce urban heat!"
+                            : "Consider increasing green spaces to reduce heat."}
+                        </p>
+                      </div>
                     </>
                   )}
 
@@ -499,16 +688,14 @@ const ScenarioPage = () => {
             </div>
           </div>
 
-          {/* ═══════════════════════════════
-              MAIN PANEL (9 cols)
-              ═══════════════════════════════ */}
-          <div className="lg:col-span-9 space-y-6">
+          {/* RIGHT COLUMN: Analytics Charts */}
+          <div className="lg:col-span-8 space-y-6">
 
-            {/* --- KPI Cards --- */}
+            {/* KPI Cards Row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 {
-                  label: "National Avg Temp",
+                  label: `National Avg (${viewLevel === "states" ? "States" : "Districts"})`,
                   value: kpiData?.nationalAvg,
                   sub: null,
                   icon: Thermometer,
@@ -517,7 +704,7 @@ const ScenarioPage = () => {
                   valueColor: "text-foreground",
                 },
                 {
-                  label: "Hottest District",
+                  label: `Hottest ${viewLevel === "states" ? "State" : "District"}`,
                   value: kpiData?.hottestDistrict.temp,
                   sub: kpiData?.hottestDistrict.name,
                   icon: TrendingUp,
@@ -526,13 +713,13 @@ const ScenarioPage = () => {
                   valueColor: "text-red-500",
                 },
                 {
-                  label: "Coolest District",
+                  label: `Coolest ${viewLevel === "states" ? "State" : "District"}`,
                   value: kpiData?.coolestDistrict.temp,
                   sub: kpiData?.coolestDistrict.name,
                   icon: TrendingDown,
-                  iconBg: "bg-eco/10",
-                  iconColor: "text-eco",
-                  valueColor: "text-eco",
+                  iconBg: "bg-emerald-500/10",
+                  iconColor: "text-emerald-500",
+                  valueColor: "text-emerald-500",
                 },
               ].map((card, i) => (
                 <div key={i} className="bg-card rounded-2xl shadow-card p-5 border border-border">
@@ -558,120 +745,16 @@ const ScenarioPage = () => {
               ))}
             </div>
 
-            {/* --- Map --- */}
-            <div className="bg-card rounded-2xl shadow-card p-5 border border-border">
-              <h2 className="font-display font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-primary" />
-                {viewLevel === "states" ? "State" : "District"} Temperature Map
-              </h2>
-              <div className="h-[400px] rounded-xl overflow-hidden bg-muted/30">
-                <ChoroplethMap
-                  level={viewLevel}
-                  highlightedDistrict={selectedLocation}
-                  onLocationClick={(feature: any) => {
-                    const name = feature.properties?.name || feature.properties?.district_name;
-                    if (name) setSelectedLocation(name);
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* --- Time-Series Projection (appears after prediction) --- */}
-            {timeSeriesResult && (() => {
-              // Apply spatial model's tempChange to time-series predictions for consistency
-              // This makes the projection START from the spatial prediction result
-              const offset = tempChange || 0;
-              const adjustedPredictions = timeSeriesResult.predictions.map(p => ({
-                ...p,
-                temperature: Math.round((p.temperature + offset) * 100) / 100 // Apply offset and round
-              }));
-
-              const adjustedBaseline = baselineTemp || timeSeriesResult.metrics.baseline_temp;
-              const temps = adjustedPredictions.map(p => p.temperature);
-              const minTemp = Math.min(...temps);
-              const maxTemp = Math.max(...temps);
-              const adjustedPeak = maxTemp;
-              const avgAdjustedTemp = temps.reduce((sum, t) => sum + t, 0) / temps.length;
-              const changeFromBaseline = avgAdjustedTemp - adjustedBaseline;
-              const effectiveTrend = offset < -0.1 ? "cooling" : offset > 0.1 ? "warming" : "stable";
-
-              return (
-                <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl shadow-card p-6 border border-primary/20">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h2 className="font-display font-semibold text-foreground text-sm flex items-center gap-2">
-                        {effectiveTrend === "cooling" ? <TrendingDown className="w-4 h-4 text-eco" /> : <TrendingUp className="w-4 h-4 text-accent" />}
-                        10-Year Projection with Your Scenario
-                      </h2>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Based on spatial prediction ({offset > 0 ? "+" : ""}{offset.toFixed(1)}°C) · Confidence: {Math.round(timeSeriesResult.metrics.confidence * 100)}%
-                      </p>
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      effectiveTrend === "cooling"
-                        ? "bg-eco/10 text-eco"
-                        : effectiveTrend === "warming"
-                          ? "bg-red-500/10 text-red-500"
-                          : "bg-muted text-muted-foreground"
-                    }`}>
-                      {effectiveTrend === "cooling" ? "↓" : effectiveTrend === "warming" ? "↑" : "→"} {effectiveTrend}
-                    </div>
-                  </div>
-
-                  <div className="h-56">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={adjustedPredictions} margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                        <XAxis dataKey="year" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickLine={false} axisLine={false} />
-                        <YAxis
-                          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(v: number) => `${v.toFixed(1)}°`}
-                          domain={[Math.floor(minTemp - 1), Math.ceil(maxTemp + 1)]}
-                          width={45}
-                        />
-                        <Tooltip content={<ProjectionTooltip />} />
-                        <ReferenceLine
-                          y={adjustedBaseline}
-                          stroke="hsl(var(--muted-foreground))"
-                          strokeDasharray="5 5"
-                          opacity={0.5}
-                          label={{ value: "Current", fill: "hsl(var(--muted-foreground))", fontSize: 10, position: "right" }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="temperature"
-                          stroke={effectiveTrend === "cooling" ? "hsl(142, 76%, 36%)" : "hsl(var(--accent))"}
-                          strokeWidth={2.5}
-                          dot={{ r: 4, fill: effectiveTrend === "cooling" ? "hsl(142, 76%, 36%)" : "hsl(var(--accent))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
-                          activeDot={{ r: 6 }}
-                          animationDuration={800}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div className="flex items-center gap-6 mt-3 text-xs text-muted-foreground">
-                    <span>Peak: <strong className="text-foreground">{adjustedPeak.toFixed(1)}°C</strong></span>
-                    <span>Avg vs Current: <strong className={changeFromBaseline < 0 ? "text-eco" : "text-red-500"}>
-                      {changeFromBaseline > 0 ? "+" : ""}{changeFromBaseline.toFixed(1)}°C
-                    </strong></span>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* --- Bottom Charts Grid --- */}
+            {/* Charts Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-              {/* Temperature Trend (Recharts AreaChart) */}
+              {/* Temperature Trend (Historical) */}
               <div className="bg-card rounded-2xl shadow-card p-5 border border-border">
                 <h2 className="font-display font-semibold text-foreground text-sm mb-4 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-red-500" />
-                  Temperature Trend (2015–2024)
+                  Historical Trend (2015–2024)
                 </h2>
-                <div className="h-56">
+                <div className="h-52">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
                       <defs>
@@ -699,20 +782,33 @@ const ScenarioPage = () => {
                 </div>
               </div>
 
-              {/* Top 10 Hottest Locations (Recharts BarChart) */}
+              {/* Top 10 Hottest Locations */}
               <div className="bg-card rounded-2xl shadow-card p-5 border border-border">
                 <h2 className="font-display font-semibold text-foreground text-sm mb-4 flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-orange-500" />
                   Top 10 Hottest {viewLevel === "states" ? "States" : "Districts"}
                 </h2>
-                <div className="h-56">
+                <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={hottestLocations} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
+                    <BarChart data={hottestLocations} layout="vertical" margin={{ top: 5, right: 40, left: 5, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
-                      <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}°`} domain={[30, "dataMax + 1"]} />
-                      <YAxis type="category" dataKey="name" width={130} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} tickLine={false} axisLine={false} />
+                      <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}°`} domain={[28, "dataMax + 2"]} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        width={140}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value: string) => value.length > 18 ? `${value.slice(0, 16)}...` : value}
+                      />
                       <Tooltip content={<TrendTooltip />} />
-                      <Bar dataKey="temperature" radius={[0, 4, 4, 0]} animationDuration={800}>
+                      <Bar
+                        dataKey="temperature"
+                        radius={[0, 4, 4, 0]}
+                        animationDuration={800}
+                        activeBar={{ stroke: "none", fill: "currentColor", fillOpacity: 0.9 }}
+                      >
                         {hottestLocations.map((_: any, i: number) => (
                           <Cell key={i} fill={i < 3 ? "#ef4444" : i < 6 ? "#f97316" : "#fb923c"} />
                         ))}
@@ -721,36 +817,41 @@ const ScenarioPage = () => {
                   </ResponsiveContainer>
                 </div>
               </div>
+            </div>
 
-              {/* Feature Importance (full width) */}
-              <div className="md:col-span-2 bg-card rounded-2xl shadow-card p-5 border border-border">
-                <h2 className="font-display font-semibold text-foreground text-sm mb-1 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-accent" />
-                  Model Feature Importance
-                </h2>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Random Forest model reveals which factors most impact urban heat.
+            {/* Feature Importance (Full Width) */}
+            <div className="bg-card rounded-2xl shadow-card p-5 border border-border">
+              <h2 className="font-display font-semibold text-foreground text-sm mb-1 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-accent" />
+                ML Model Feature Importance
+              </h2>
+              <p className="text-xs text-muted-foreground mb-4">
+                Random Forest model reveals which factors most impact urban heat in Malaysia.
+              </p>
+              <div className="h-36">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={featureImportance} layout="vertical" margin={{ top: 0, right: 40, left: 10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
+                    <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} domain={[0, 45]} />
+                    <YAxis type="category" dataKey="feature" width={130} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, "Importance"]} contentStyle={{ borderRadius: "8px", border: "1px solid hsl(var(--border))" }} />
+                    <Bar
+                      dataKey="importance"
+                      radius={[0, 6, 6, 0]}
+                      animationDuration={1000}
+                      activeBar={{ stroke: "none", fill: "currentColor", fillOpacity: 0.9 }}
+                    >
+                      {featureImportance.map((item, i) => (
+                        <Cell key={i} fill={item.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 p-3 bg-accent/5 border border-accent/10 rounded-xl">
+                <p className="text-xs text-muted-foreground">
+                  <strong className="text-accent">Key Insight:</strong> Urban density (NDBI) is the strongest heat driver at 38.2%, followed by vegetation cover (NDVI) at 25%. This validates that greening cities can effectively combat urban heat islands.
                 </p>
-                <div className="h-40">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={featureImportance} layout="vertical" margin={{ top: 0, right: 40, left: 10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
-                      <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} domain={[0, 45]} />
-                      <YAxis type="category" dataKey="feature" width={130} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickLine={false} axisLine={false} />
-                      <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, "Importance"]} contentStyle={{ borderRadius: "8px", border: "1px solid hsl(var(--border))" }} />
-                      <Bar dataKey="importance" radius={[0, 6, 6, 0]} animationDuration={1000}>
-                        {featureImportance.map((item, i) => (
-                          <Cell key={i} fill={item.fill} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 p-3 bg-accent/5 border border-accent/10 rounded-xl">
-                  <p className="text-xs text-muted-foreground">
-                    <strong className="text-accent">Key Insight:</strong> Urban density (NDBI) is the strongest heat driver at 38.2%, followed by vegetation cover (NDVI) at 25%. This validates that greening cities can effectively combat urban heat.
-                  </p>
-                </div>
               </div>
             </div>
           </div>
