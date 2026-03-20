@@ -1,0 +1,19 @@
+{
+  "repository_type": "multi-part",
+  "parts": [
+    {
+      "part_id": "frontend",
+      "project_type_id": "web",
+      "display_name": "Frontend (Web)",
+      "root_path": "c:\\Users\\Omen\\Documents\\urban-heat-insights-main",
+      "primary_tech": "vite_react_shadcn_ts"
+    },
+    {
+      "part_id": "backend",
+      "project_type_id": "backend",
+      "display_name": "Backend (API)",
+      "root_path": "c:\\Users\\Omen\\Documents\\urban-heat-insights-main\\backend",
+      "primary_tech": "python_fastapi_ml"
+    }
+  ]
+}

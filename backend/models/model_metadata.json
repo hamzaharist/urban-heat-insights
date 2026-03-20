@@ -1,12 +1,13 @@
 {
   "model_type": "RandomForestRegressor",
+  "training_strategy": "state_based_groupkfold_cv",
   "best_params": {
-    "n_estimators": 100,
+    "n_estimators": 200,
+    "max_depth": 20,
     "min_samples_split": 5,
-    "min_samples_leaf": 1,
+    "min_samples_leaf": 2,
     "max_features": "sqrt",
-    "max_depth": 30,
-    "bootstrap": false
+    "bootstrap": true
   },
   "features": [
     "NDVI",
@@ -14,29 +15,35 @@
     "Elevation",
     "Population"
   ],
-  "training_samples": 62134,
-  "test_samples": 15534,
-  "baseline_r2": 0.9167482817534965,
-  "tuned_r2": 0.9414619401569037,
-  "baseline_rmse": 1.6457970404363054,
-  "tuned_rmse": 1.3800627580229297,
-  "tuning_time_seconds": 304.11955523490906,
+  "training_samples": 42706,
+  "n_states": 15,
+  "cv_folds": 5,
+  "cv_r2_mean": 0.7429261311049353,
+  "cv_r2_std": 0.05612297242909863,
+  "cv_mae_mean": 1.404323404801853,
+  "cv_rmse_mean": 1.870881753878353,
+  "oob_r2": 0.7866034575468767,
   "feature_importance": [
     {
-      "Feature": "NDBI",
-      "Importance": 0.3821148870026724
-    },
-    {
-      "Feature": "NDVI",
-      "Importance": 0.2496121952258196
+      "Feature": "Elevation",
+      "Importance": 0.5444722553968883
     },
     {
       "Feature": "Population",
-      "Importance": 0.2256614223356032
+      "Importance": 0.18655140953444552
     },
     {
-      "Feature": "Elevation",
-      "Importance": 0.14261149543590487
+      "Feature": "NDBI",
+      "Importance": 0.17577734506514736
+    },
+    {
+      "Feature": "NDVI",
+      "Importance": 0.09319899000351892
     }
-  ]
+  ],
+  "tuned_r2": 0.7429261311049353,
+  "tuned_rmse": 1.870881753878353,
+  "baseline_r2": 0.9167,
+  "baseline_rmse": 1.6458,
+  "test_samples": 8541
 }

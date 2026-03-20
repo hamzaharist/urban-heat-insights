@@ -1,0 +1,109 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2026-03-17T22:08:14Z",
+    "last_updated": "2026-03-17T22:15:20Z"
+  },
+  "mode": "initial_scan",
+  "scan_level": "exhaustive",
+  "project_root": "c:\\Users\\Omen\\Documents\\urban-heat-insights-main",
+  "output_folder": "c:\\Users\\Omen\\Documents\\urban-heat-insights-main\\_bmad-output",
+  "completed_steps": [
+    {
+      "step": "step_1",
+      "status": "completed",
+      "timestamp": "2026-03-17T22:10:05Z",
+      "summary": "Classified as multi-part with 2 parts"
+    },
+    {
+      "step": "step_2",
+      "status": "completed",
+      "timestamp": "2026-03-17T22:11:42Z",
+      "summary": "Found 12 existing docs"
+    },
+    {
+      "step": "step_3",
+      "status": "completed",
+      "timestamp": "2026-03-17T22:15:20Z",
+      "summary": "Tech stack: React/Vite (Frontend) and FastAPI/Python (Backend)"
+    },
+    {
+      "step": "step_4",
+      "status": "completed",
+      "timestamp": "2026-03-17T22:18:20Z",
+      "summary": "Generated APIs, DB schema, UI components, and state management endpoints."
+    },
+    {
+      "step": "step_5",
+      "status": "completed",
+      "timestamp": "2026-03-17T22:18:25Z",
+      "summary": "Generated comprehensive tree breakdown."
+    },
+    {
+      "step": "step_6",
+      "status": "completed",
+      "timestamp": "2026-03-17T22:18:30Z",
+      "summary": "Generated local development and prod deployment guides."
+    },
+    {
+      "step": "step_7",
+      "status": "completed",
+      "timestamp": "2026-03-17T22:20:00Z",
+      "summary": "Generated cross-stack architectural integrations."
+    },
+    {
+      "step": "step_8",
+      "status": "completed",
+      "timestamp": "2026-03-17T22:20:10Z",
+      "summary": "Generated individual Front/Back end architecture write-ups."
+    },
+    {
+      "step": "step_9",
+      "status": "completed",
+      "timestamp": "2026-03-17T22:20:15Z",
+      "summary": "Generated Project Overview MD"
+    },
+    {
+      "step": "step_10",
+      "status": "completed",
+      "timestamp": "2026-03-17T22:20:25Z",
+      "summary": "Master index completed and mapped."
+    }
+  ],
+  "current_step": "completed",
+  "findings": {
+    "project_classification": "multi-part repository containing a Vite/React frontend and a Python FastAPI backend.",
+    "technology_stack": "React, TypeScript, Tailwind, Mapbox GL (Frontend) | Python, FastAPI, Supabase, XGBoost (Backend)"
+  },
+  "project_types": [
+    {
+      "part_id": "frontend",
+      "project_type_id": "web",
+      "display_name": "Frontend (Web)"
+    },
+    {
+      "part_id": "backend",
+      "project_type_id": "backend",
+      "display_name": "Backend (API)"
+    }
+  ],
+  "outputs_generated": [
+    "project-scan-report.json",
+    "project_parts_metadata.json",
+    "technology-stack.md",
+    "architecture-patterns.md",
+    "data-models-backend.md",
+    "api-contracts-backend.md",
+    "ui-component-inventory-frontend.md",
+    "state-management-patterns-frontend.md",
+    "source-tree-analysis.md",
+    "development-guide.md",
+    "deployment-guide.md",
+    "integration-architecture.md",
+    "architecture-frontend.md",
+    "architecture-backend.md",
+    "project-overview.md",
+    "index.md"
+  ],
+  "resume_instructions": "Completed"
+}
