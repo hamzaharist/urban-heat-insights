@@ -47,7 +47,23 @@
       "Bash(timeout:*)",
       "Bash(dir backenddata)",
       "Bash(dir:*)",
-      "Bash(for file in *.csv)"
+      "Bash(for file in *.csv)",
+      "Bash(PYTHONIOENCODING=utf-8 ../.venv312/Scripts/python measure_models.py)",
+      "Bash(PYTHONIOENCODING=utf-8 ../.venv312/Scripts/python evaluate_models_live.py)",
+      "Bash(PYTHONIOENCODING=utf-8 ../.venv312/Scripts/python retrain_spatial_model.py)",
+      "Bash(\"/c/Users/Omen/AppData/Local/Programs/Python/Python312/python.exe\" re_evaluate_13_models.py)",
+      "Bash(source .venv312/Scripts/activate)",
+      "Bash(PYTHONUTF8=1 python re_evaluate_13_models.py)",
+      "Bash(PYTHONUTF8=1 python tune_13_models_location_based.py)",
+      "Bash(PYTHONUTF8=1 python -c \":*)",
+      "Bash(PYTHONUTF8=1 .venv312/Scripts/python.exe generate_workflow.py)",
+      "Bash(PYTHONUTF8=1 .venv312/Scripts/python.exe generate_project_phase.py)",
+      "Bash(wc -l /c/Users/Omen/Documents/urban-heat-insights-main/backend/data/UHI_Training_Data_Malaysia_*.csv)",
+      "Bash(python3:*)",
+      "Bash(git add backend/models/model_metadata.json backend/evaluate_models_live.py backend/measure_models.py backend/retrain_spatial_model.py evaluate_tuned_model.py generate_project_phase.py generate_workflow.py re_evaluate_13_models.py tune_13_models_location_based.py backend/data/fig_*.png SYSTEM_ARCHITECTURE.md _bmad-output/ \"_fyp_report_text.txt\" \"FYP 2_Harist Hamzah Hutapea \\(2\\).docx\")",
+      "Bash(git commit:*)",
+      "Bash(git push origin main)",
+      "Bash(git add -A)"
     ]
   }
 }

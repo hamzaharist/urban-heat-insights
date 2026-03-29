@@ -206,7 +206,7 @@ export function BloomeeWidget({ data, isLoading }: BloomeeWidgetProps) {
                 </div>
               </div>
               <span className="text-lg font-bold text-green-400">
-                {(data.ndvi * 100).toFixed(0)}%
+                {data.ndvi.toFixed(2)}
               </span>
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
@@ -230,13 +230,13 @@ export function BloomeeWidget({ data, isLoading }: BloomeeWidgetProps) {
                 </div>
               </div>
               <span className="text-lg font-bold text-blue-400">
-                {(data.ndbi * 100).toFixed(0)}%
+                {data.ndbi.toFixed(2)}
               </span>
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${getPercentage(data.ndbi)}%` }}
+                style={{ width: `${getPercentage(Math.abs(data.ndbi))}%` }}
               />
             </div>
           </div>

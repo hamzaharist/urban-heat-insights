@@ -36,7 +36,7 @@ const createStripePattern = (): HTMLCanvasElement => {
 interface ChoroplethMapProps {
      level: 'states' | 'districts';
      onHoverChange?: (data: any) => void;
-     onLocationClick?: (data: any) => void;
+     onLocationClick?: (data: any, meta?: { ctrlKey: boolean }) => void;
      highlightedDistrict?: string | null;
      temperatureFilter?: [number, number];
 }
@@ -339,7 +339,8 @@ export function ChoroplethMap({ level, onHoverChange, onLocationClick, highlight
           const feature = event.features?.[0];
           if (feature && onLocationClick && feature.properties) {
                setSelectedFeature(feature);
-               onLocationClick(feature.properties);
+               const ctrlKey = event.originalEvent?.ctrlKey || event.originalEvent?.metaKey || false;
+               onLocationClick(feature.properties, { ctrlKey });
           }
      };
 

@@ -262,6 +262,7 @@ const ScenarioPage = () => {
 
       if (spatialRes.ok) {
         const result = await spatialRes.json();
+        setBaselineTemp(result.original_temp); // Use model's baseline for consistency
         setPredictedTemp(result.predicted_temp);
         setTempChange(result.temp_difference);
       } else {
@@ -578,22 +579,16 @@ const ScenarioPage = () => {
 
             {/* --- Time-Series Projection (appears after prediction) --- */}
             {timeSeriesResult && (() => {
-              // Apply spatial model's tempChange to time-series predictions for consistency
-              // This makes the projection START from the spatial prediction result
-              const offset = tempChange || 0;
-              const adjustedPredictions = timeSeriesResult.predictions.map(p => ({
-                ...p,
-                temperature: Math.round((p.temperature + offset) * 100) / 100 // Apply offset and round
-              }));
-
-              const adjustedBaseline = baselineTemp || timeSeriesResult.metrics.baseline_temp;
-              const temps = adjustedPredictions.map(p => p.temperature);
+              // Both the spatial prediction and this projection now use the SAME
+              // Random Forest model — no offset adjustment needed.
+              const predictions = timeSeriesResult.predictions;
+              const rfBaseline = baselineTemp || timeSeriesResult.metrics.baseline_temp;
+              const temps = predictions.map(p => p.temperature);
               const minTemp = Math.min(...temps);
               const maxTemp = Math.max(...temps);
-              const adjustedPeak = maxTemp;
-              const avgAdjustedTemp = temps.reduce((sum, t) => sum + t, 0) / temps.length;
-              const changeFromBaseline = avgAdjustedTemp - adjustedBaseline;
-              const effectiveTrend = offset < -0.1 ? "cooling" : offset > 0.1 ? "warming" : "stable";
+              const avgTemp = temps.reduce((sum, t) => sum + t, 0) / temps.length;
+              const changeFromBaseline = avgTemp - rfBaseline;
+              const effectiveTrend = changeFromBaseline < -0.1 ? "cooling" : changeFromBaseline > 0.1 ? "warming" : "stable";
 
               return (
                 <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl shadow-card p-6 border border-primary/20">
@@ -604,7 +599,7 @@ const ScenarioPage = () => {
                         10-Year Projection with Your Scenario
                       </h2>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Based on spatial prediction ({offset > 0 ? "+" : ""}{offset.toFixed(1)}°C) · Confidence: {Math.round(timeSeriesResult.metrics.confidence * 100)}%
+                        Based on Random Forest model · Confidence: {Math.round(timeSeriesResult.metrics.confidence * 100)}%
                       </p>
                     </div>
                     <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -620,7 +615,7 @@ const ScenarioPage = () => {
 
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={adjustedPredictions} margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
+                      <LineChart data={predictions} margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                         <XAxis dataKey="year" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickLine={false} axisLine={false} />
                         <YAxis
@@ -633,7 +628,7 @@ const ScenarioPage = () => {
                         />
                         <Tooltip content={<ProjectionTooltip />} />
                         <ReferenceLine
-                          y={adjustedBaseline}
+                          y={rfBaseline}
                           stroke="hsl(var(--muted-foreground))"
                           strokeDasharray="5 5"
                           opacity={0.5}
@@ -653,7 +648,7 @@ const ScenarioPage = () => {
                   </div>
 
                   <div className="flex items-center gap-6 mt-3 text-xs text-muted-foreground">
-                    <span>Peak: <strong className="text-foreground">{adjustedPeak.toFixed(1)}°C</strong></span>
+                    <span>Peak: <strong className="text-foreground">{maxTemp.toFixed(1)}°C</strong></span>
                     <span>Avg vs Current: <strong className={changeFromBaseline < 0 ? "text-eco" : "text-red-500"}>
                       {changeFromBaseline > 0 ? "+" : ""}{changeFromBaseline.toFixed(1)}°C
                     </strong></span>

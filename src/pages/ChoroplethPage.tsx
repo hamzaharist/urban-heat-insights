@@ -192,9 +192,17 @@ export function ChoroplethPage() {
                          onHoverChange={setHoveredRegionData}
                          highlightedDistrict={selectedLocation}
                          temperatureFilter={temperatureFilter}
-                         onLocationClick={(data) => {
+                         onLocationClick={(data, meta) => {
                               const locationName = data.name || data.state_name || data.district_name;
-                              // Toggle lock: click same region to unlock
+
+                              // Ctrl+Click → set as comparison location
+                              if (meta?.ctrlKey && selectedLocation && locationName !== selectedLocation) {
+                                   setComparisonMode(true);
+                                   setComparisonLocation(locationName);
+                                   return;
+                              }
+
+                              // Regular click → toggle primary selection
                               if (selectedLocation === locationName) {
                                    setSelectedLocation(null);
                                    setLockedRegionData(null);

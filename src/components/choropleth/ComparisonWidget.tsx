@@ -70,8 +70,8 @@ const CompareMetric = ({
         {/* Location 1 Value */}
         <div className={`flex items-center gap-1.5 ${winner === 1 ? 'scale-105' : ''} transition-transform`}>
           <span
-            className="text-lg font-bold"
-            style={{ color: colorFn ? colorFn(v1) : undefined }}
+            className={`text-lg font-bold ${!colorFn ? (winner === 1 ? 'text-green-400' : winner === 2 ? 'text-red-400' : 'text-white') : ''}`}
+            style={colorFn ? { color: colorFn(v1) } : undefined}
           >
             {v1.toFixed(1)}
           </span>
@@ -107,8 +107,8 @@ const CompareMetric = ({
             </span>
           )}
           <span
-            className="text-lg font-bold"
-            style={{ color: colorFn ? colorFn(v2) : undefined }}
+            className={`text-lg font-bold ${!colorFn ? (winner === 2 ? 'text-green-400' : winner === 1 ? 'text-red-400' : 'text-white') : ''}`}
+            style={colorFn ? { color: colorFn(v2) } : undefined}
           >
             {v2.toFixed(1)}
           </span>

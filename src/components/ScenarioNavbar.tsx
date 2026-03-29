@@ -7,22 +7,15 @@ import {
   Thermometer,
   Leaf,
   Building2,
-  Activity,
   RotateCcw,
-  Info,
   Map,
   Layers,
   Zap,
   TrendingUp,
   TrendingDown,
   ChevronDown,
-  X,
   Sparkles,
-  Database,
-  Clock,
   Target,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,14 +29,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 
 // --- Types ---
 interface ScenarioNavbarProps {
@@ -171,93 +156,7 @@ const ColorScaleLegend = () => (
   </div>
 );
 
-// --- Model Info Dialog ---
-const ModelInfoDialog = () => (
-  <Dialog>
-    <DialogTrigger asChild>
-      <button className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-lg transition-colors group">
-        <Activity className="w-3.5 h-3.5 text-emerald-500" />
-        <span className="text-xs font-semibold text-emerald-500">94%</span>
-        <Info className="w-3 h-3 text-emerald-500/60 group-hover:text-emerald-500 transition-colors" />
-      </button>
-    </DialogTrigger>
-    <DialogContent className="sm:max-w-md">
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <Activity className="w-5 h-5 text-emerald-500" />
-          Model Information
-        </DialogTitle>
-        <DialogDescription>
-          Details about the prediction model used in this dashboard
-        </DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        {/* Model Stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 bg-muted/50 rounded-xl">
-            <p className="text-xs text-muted-foreground mb-1">Model Type</p>
-            <p className="font-semibold text-sm">Random Forest</p>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-xl">
-            <p className="text-xs text-muted-foreground mb-1">R² Score</p>
-            <p className="font-semibold text-sm text-emerald-500">0.9415</p>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-xl">
-            <p className="text-xs text-muted-foreground mb-1">RMSE</p>
-            <p className="font-semibold text-sm">1.38°C</p>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-xl">
-            <p className="text-xs text-muted-foreground mb-1">Training Samples</p>
-            <p className="font-semibold text-sm">62,134</p>
-          </div>
-        </div>
 
-        {/* Feature Importance */}
-        <div>
-          <p className="text-sm font-medium mb-2">Feature Importance</p>
-          <div className="space-y-2">
-            {[
-              { name: "Urban Density (NDBI)", value: 38.2, color: "bg-red-500" },
-              { name: "Vegetation (NDVI)", value: 25.0, color: "bg-green-500" },
-              { name: "Population", value: 22.6, color: "bg-amber-500" },
-              { name: "Elevation", value: 14.3, color: "bg-blue-500" },
-            ].map((feature) => (
-              <div key={feature.name} className="flex items-center gap-2">
-                <div className="w-24 text-xs text-muted-foreground truncate">{feature.name}</div>
-                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full ${feature.color} rounded-full transition-all duration-500`}
-                    style={{ width: `${feature.value}%` }}
-                  />
-                </div>
-                <div className="w-10 text-xs font-medium text-right">{feature.value}%</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Data Sources */}
-        <div className="p-3 bg-muted/30 rounded-xl border border-border">
-          <div className="flex items-center gap-2 mb-2">
-            <Database className="w-4 h-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Data Sources</p>
-          </div>
-          <ul className="text-xs text-muted-foreground space-y-1">
-            <li>• Landsat 8/9 satellite imagery (LST, NDVI, NDBI)</li>
-            <li>• Malaysia Department of Statistics (Population)</li>
-            <li>• SRTM Digital Elevation Model</li>
-          </ul>
-        </div>
-
-        {/* Last Updated */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Clock className="w-3.5 h-3.5" />
-          <span>Model last trained: January 2025</span>
-        </div>
-      </div>
-    </DialogContent>
-  </Dialog>
-);
 
 // --- Main Navbar Component ---
 export function ScenarioNavbar({
@@ -330,8 +229,7 @@ export function ScenarioNavbar({
                   <ColorScaleLegend />
                 </div>
 
-                {/* Model Info */}
-                <ModelInfoDialog />
+
               </div>
             </div>
           </div>
