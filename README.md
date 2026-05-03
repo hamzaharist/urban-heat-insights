@@ -39,6 +39,11 @@ Urban Heat Insights reveals Malaysia's unique climate phenomenon: **well-planned
 - **NDVI Monitoring** - Vegetation coverage measurement
 - **Historical Trends** - 2016-2024 temperature patterns (CSV-based)
 
+### 🔮 Scenario Planning & Prediction
+- **Time-Series Projection** - Forecast future temperatures up to 2050 using Random Forest models
+- **Interactive Interventions** - Simulate the cooling impact of adding green spaces (NDVI) or reducing built-up areas (NDBI)
+- **Climate Warming Models** - Built-in baseline climate change offsets combined with spatial predictions
+
 ---
 
 ## 🏗️ Technology Stack
@@ -223,6 +228,10 @@ CREATE TABLE hotspots (
 - `GET /api/timeseries/temperature` - Historical temperature trends
   - Query params: `region` (optional), `level` (state|district)
 
+### Prediction & Scenarios
+- `POST /api/predict-scenario` - Generate future temperature projections based on intervention scenarios
+- `GET /api/predict/model-info` - Get Random Forest model metrics and configuration
+
 ---
 
 ## 📈 Key Metrics
@@ -329,8 +338,8 @@ Contributions welcome! Please:
 - [ ] Monthly granularity instead of yearly
 
 ### Phase 2: Advanced Features
-- [ ] Predictive temperature modeling
-- [ ] Climate change scenario analysis
+- [x] Predictive temperature modeling
+- [x] Climate change scenario analysis
 - [ ] Real-time satellite data integration
 - [ ] Mobile application
 
