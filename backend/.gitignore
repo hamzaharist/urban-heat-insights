@@ -1,4 +1,6 @@
 service-account-key.json
+uhifyp-*.json
+*.json
 __pycache__/
 *.pyc
 .env

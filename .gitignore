@@ -74,6 +74,8 @@ next-env.d.ts
 *_key.json
 credentials.json
 service-account*.json
+uhifyp-*.json
+*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*.json
 nul
 
 # Large data files and models (>100MB)
